@@ -37,7 +37,7 @@ install:
     - pip install -U platformio
 
 script:
-    - platformio run
+    - platformio ci --board=d1_mini
 
 
 #
