@@ -1,31 +1,45 @@
 /**
- * Blink
+ * Radar
  *
- * Turns on an LED on for one second,
- * then off for one second, repeatedly.
+ * Scan for wifi devices.
+ *
  */
-#include "Arduino.h"
 
-// Set LED_BUILTIN if it is not defined by Arduino framework
-// #define LED_BUILTIN 13
+// Expose Espressif SDK functionality
+extern "C" {
+    #include "user_interface.h"
+}
+
+#include <ESP8266WiFi.h>
+
+/**
+ * Callback for promiscuous mode
+ */
+static void ICACHE_FLASH_ATTR sniffer_callback(uint8_t *buffer, uint16_t length)
+{
+    
+}
 
 void setup()
 {
-  // initialize LED digital pin as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
+    // Initialize serial communication
+    Serial.begin(9600);
+    Serial.println();
+    Serial.print("Initializing system.");
+
+    delay(10);
+    wifi_set_opmode(STATION_MODE); // Promiscuous mode only works with station mode
+    wifi_station_disconnect(); // API requirement before enable promiscuous mode.
+    wifi_set_channel(1);
+    wifi_promiscuous_enable(0);
+    wifi_set_promiscuous_rx_cb(sniffer_callback);
+    wifi_promiscuous_enable(1);
+
+    Serial.print("System initialized.");
+
 }
 
 void loop()
 {
-  // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED_BUILTIN, HIGH);
 
-  // wait for a second
-  delay(1000);
-
-  // turn the LED off by making the voltage LOW
-  digitalWrite(LED_BUILTIN, LOW);
-
-   // wait for a second
-  delay(1000);
 }
