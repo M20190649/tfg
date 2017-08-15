@@ -1,6 +1,6 @@
 #include "sniffer.hpp"
 #include <stdio.h>
-#include "arduino.h"
+#include "Arduino.h"
 
 /**
  * Callback for promiscuous mode

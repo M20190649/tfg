@@ -11,7 +11,7 @@ extern "C" {
 }
 
 #include <Arduino.h>
-#include "sniffer/sniffer.hpp"
+#include <sniffer.hpp>
 
 void setup()
 {
