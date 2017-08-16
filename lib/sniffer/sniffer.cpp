@@ -22,3 +22,12 @@ void ICACHE_FLASH_ATTR sniffer_callback(uint8_t *buffer, uint16_t length)
         }
     }
 }
+
+/*
+ * Change WiFi channel to the next. 
+ */
+void channel_hop() {
+    uint8_t current_channel = wifi_get_channel();
+    uint8_t new_channel = (current_channel != 13) ? current_channel+1: 1; 
+    wifi_set_channel(new_channel);
+}

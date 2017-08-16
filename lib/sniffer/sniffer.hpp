@@ -132,10 +132,19 @@ static const char MAC_FMT[] = "%02X:%02X:%02X:%02X:%02X:%02X"; ///< MAC address 
  * Check if packet received in buff is a probe request package , if it is
  * extracts the MAC address of the transmitting station.
  *
- * @param[in]     buffer the data received.
- * @param[out]    length data length
+ * \param[in]     buffer the data received.
+ * \param[out]    length data length
  *
  */
 void ICACHE_FLASH_ATTR sniffer_callback(uint8_t *buffer, uint16_t length);
+
+/**
+ * \brief Change WiFi channel to the next.
+ *
+ * Increment the actual WiFi channel to the next until channel 13, when run out
+ * start again from first channel.
+ *
+ */
+void channel_hop();
 
 #endif
