@@ -12,11 +12,18 @@
 #define SNIFFER_HPP_
 
 #include <stdint.h>
+#include "Arduino.h"
+#include <map>
 
 // Expose Espressif SDK functionality
 extern "C" {
     #include "user_interface.h"
+    #include "sntp.h"
 }
+
+namespace Sniffer {
+
+extern std::map<String,uint32_t> sta_detected;///<Store stations detected transmitting probe request.
 
 /**
 * Structures for promiscuous mode callback. Taken literally from ESP8226 documentation.
@@ -124,8 +131,6 @@ struct iee80211_header {
     // purpose of this project. For more information see IEEE 802.11 Standard
 };
 
-static const char MAC_FMT[] = "%02X:%02X:%02X:%02X:%02X:%02X"; ///< MAC address format for printf
-
 /**
  * \brief RX callback function for process packets received in promiscuous mode.
  *
@@ -146,5 +151,5 @@ void ICACHE_FLASH_ATTR sniffer_callback(uint8_t *buffer, uint16_t length);
  *
  */
 void channel_hop();
-
+}
 #endif

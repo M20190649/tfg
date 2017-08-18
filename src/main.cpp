@@ -42,9 +42,9 @@ void setup()
 
     //Get time through SNTP
     Serial.print("Getting timestamp from server.");
-    sntp_setservername(0, "hora.roa.es");
-    sntp_setservername(1, "pool.ntp.org");
-    sntp_setservername(2, "time.nist.gov");
+    sntp_setservername(0, (char*)"hora.roa.es");
+    sntp_setservername(1, (char*)"pool.ntp.org");
+    sntp_setservername(2, (char*)"time.nist.gov");
     sntp_set_timezone(+2);
     sntp_init();
 
@@ -59,16 +59,17 @@ void setup()
 
     Serial.printf("\nSNTP OK\nTimestamp:	%d,	%s	\n",current_stamp, sntp_get_real_time(current_stamp));    
 
+    Serial.println("Starting sniffer mode.");
     // Promiscuous mode
     wifi_set_opmode(STATION_MODE); // Promiscuous mode only works with station mode
     wifi_station_disconnect(); // API requirement before enable promiscuous mode.
     wifi_set_channel(1);
     wifi_promiscuous_enable(0);
-    wifi_set_promiscuous_rx_cb(sniffer_callback);
+    wifi_set_promiscuous_rx_cb(Sniffer::sniffer_callback);
     wifi_promiscuous_enable(1);
 
     // Set callback function for channel surfing timer and enable timer.
-    os_timer_setfn(&channel_hop_timer, (os_timer_func_t *) channel_hop, NULL);
+    os_timer_setfn(&channel_hop_timer, (os_timer_func_t *) Sniffer::channel_hop, NULL);
     os_timer_arm(&channel_hop_timer, CHANNEL_HOP_INTERVAL_MS, true);
     
     Serial.println("System initialized.");
