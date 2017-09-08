@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <Time.h>
 
+#define DEBUG 0
+
 std::map<String,uint32_t> Sniffer::sta_detected;
 
 MD5Builder _md5;
@@ -21,7 +23,7 @@ void ICACHE_FLASH_ATTR Sniffer::sniffer_callback(uint8_t *buffer, uint16_t lengt
 {
     static const char MAC_FMT[] = "%02X:%02X:%02X:%02X:%02X:%02X"; ///< MAC address format for printf
 
-    if (length == 128) { // == sizeof (struct sniffer_buf). 
+    if (length == 128) { // == sizeof (struct sniffer_buf).
         //Management package. It has 112 Bytes data.
         struct Sniffer::sniffer_buf *packet = (struct sniffer_buf*) buffer;
         struct Sniffer::iee80211_header *header = (struct iee80211_header*) packet->buf;
@@ -33,9 +35,11 @@ void ICACHE_FLASH_ATTR Sniffer::sniffer_callback(uint8_t *buffer, uint16_t lengt
               sprintf(mac_addr, "%02x:%02x:%02x:%02x:%02x:%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
               String hashed_mac = md5(mac_addr);
               sta_detected[hashed_mac] = now();
-              Serial.println();
-              Serial.print(hashed_mac);
-              Serial.printf("  Time:%s\n", sntp_get_real_time(sta_detected[hashed_mac]));
+              #if DEBUG == 1
+                Serial.println();
+                Serial.print(hashed_mac);
+                Serial.printf("  Time:%s\n", sntp_get_real_time(sta_detected[hashed_mac]));
+              #endif
         }
     }
 }
