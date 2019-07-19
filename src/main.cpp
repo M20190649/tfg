@@ -19,15 +19,18 @@ extern "C" {
 
 uint32_t uptime;//debug
 
-#define CHANNEL_HOP_INTERVAL_MS   1000 // We will change WiFi channel every second
-#define SEND_DETECTIONS_INTERVAL_MS 20000 // Send detections to server every minute
-static os_timer_t channel_hop_timer; // Software timer for channel surgfing
+#define CHANNEL_HOP_INTERVAL_MS   1000 // Milliseconds to change WiFi channel
+#define SEND_DETECTIONS_INTERVAL_MS 20000 // Send detections to server every X milliseconds
+#define SNTP_WAIT_MS 100 // Time to wait to get a response from sntp.
+
+// Software timers
+static os_timer_t channel_hop_timer; // Software timer for channel surfing
 static os_timer_t send_detections_timer; // Software timer for send detections to server
+static os_timer_t sntp_timer; // Software timer for sntp sync
+
 bool channel_hop_flag = false;
 bool send_detections_flag = false;
-
-// It`s best not to do long jobs inside isr (timer callback)
-// , so only flag the timers and check flags in main loop.
+bool sntp_synced = false;
 
 void channel_hop_isr () {
     channel_hop_flag = true;
@@ -37,8 +40,19 @@ void send_detections_isr () {
     send_detections_flag = true;
 }
 
+void ICACHE_FLASH_ATTR check_sntp_stamp_isr () {
+    uint32 current_stamp;
+    current_stamp = sntp_get_current_timestamp();
+    if (current_stamp < 60000 ) {
+        os_timer_arm(&sntp_timer, SNTP_WAIT_MS, false);
+    } else {
+        os_timer_disarm(&sntp_timer);
+        sntp_synced = true;
+    }
+}
+
 void connect_wifi() {
-    WiFi.begin("HOME", "DDLpkP1u.");
+    WiFi.begin("SSID", "password");
     delay(500);
     Serial.print("Connecting");
     while (WiFi.status() != WL_CONNECTED)
@@ -58,39 +72,28 @@ void send_detections() {
     connect_wifi();
 
     // Memory pool for JSON object tree (bytes).
-    // StaticJsonBuffer allocates memory on the stack, it can be
-    // replaced by DynamicJsonBuffer which allocates in the heap.
-    StaticJsonBuffer<3000> json_buffer;
+    DynamicJsonDocument json_doc(20000);
 
-    // Create the root of the object tree.
-    //
-    // It's a reference to the JsonObject, the actual bytes are inside the
-    // JsonBuffer with all the other nodes of the object tree.
-    // Memory is freed when jsonBuffer goes out of scope.
-    JsonObject& root = json_buffer.createObject();
-    root["node"] = WiFi.macAddress();
-    JsonArray& devices = root.createNestedArray("devices");
-    JsonArray& timestamps = root.createNestedArray("timestamps");
+    json_doc["node"] = WiFi.macAddress();
+    JsonArray devices = json_doc.createNestedArray("devices");
+    JsonArray timestamps = json_doc.createNestedArray("timestamps");
 
-    unsigned long start = millis();
     for (std::map<String,uint32_t>::iterator it=Sniffer::sta_detected.begin(); it!=Sniffer::sta_detected.end(); ++it){
         devices.add(it->first);
         timestamps.add(it->second);
         yield();
     }
-    unsigned long end = millis();
-    Serial.printf("\nMillis: %d\n", (end-start));
-    yield();
-    Serial.println();
-    root.printTo(Serial);
-    Serial.printf("\nUPTIME:	%s	\n",sntp_get_real_time(uptime));//debug
+
+    // Clear detecions
+    Sniffer::sta_detected.clear();
+
     yield();
     wifi_station_disconnect(); // API requirement before enable promiscuous mode.
     wifi_set_opmode(STATION_MODE); // Promiscuous mode only works with station mode
     wifi_promiscuous_enable(1);
 }
 
-void setup()
+void ICACHE_FLASH_ATTR setup()
 {
     // Initialize serial communication
     Serial.begin(115200);
@@ -109,17 +112,18 @@ void setup()
     sntp_set_timezone(+2);
     sntp_init();
 
-    uint32_t current_stamp = 0;
-    while (current_stamp == 0) {
-        current_stamp = sntp_get_current_timestamp();
+    // Set callback function to check SNTP timestamp
+    os_timer_setfn(&sntp_timer, (os_timer_func_t *) check_sntp_stamp_isr, NULL);
+    os_timer_arm(&sntp_timer, SNTP_WAIT_MS, false);
+
+    while ( sntp_synced == false ) {
         delay(500);
         Serial.print(".");
     }
-    setTime(current_stamp);
-    sntp_stop();
-    uptime = current_stamp;// debug
 
-    Serial.printf("\nSNTP OK\nTimestamp:	%d,	%s	\n",current_stamp, sntp_get_real_time(current_stamp));
+    uint32_t current_stamp = sntp_get_current_timestamp();
+    setTime(current_stamp);
+    Serial.printf("\nSNTP OK\nTimestamp:       %d,     %s      \n",current_stamp, sntp_get_real_time(current_stamp));
 
     Serial.println("Starting sniffer mode.");
     // Promiscuous mode

@@ -50,6 +50,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+#PlatformIO
+.pio
 .pioenvs
 .piolibdeps
-.vscode/c_cpp_properties.json
+.vscode
+
