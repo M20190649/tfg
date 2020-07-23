@@ -73,9 +73,9 @@ struct iee80211_header {
     uint8_t address_2[6];
     uint8_t address_3[6];
     uint16_t seq_ctrl;
-    unsigned char payload[];
     // There are other fields defined in the standard, not necessary for the 
     // purpose of this project. For more information see IEEE 802.11 Standard
+    unsigned char payload[];
 };
 
 /**

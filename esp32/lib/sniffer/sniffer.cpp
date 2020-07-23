@@ -1,21 +1,10 @@
 #include "sniffer.hpp"
 #include <stdio.h>
-#include <MD5Builder.h>
 #include <esp_wifi.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 std::map<String,uint32_t> Sniffer::sta_detected;
-
-MD5Builder _md5;
-
-String md5(String str) {
-    _md5.begin();
-    _md5.add(String(str));
-    _md5.calculate();
-
-    return _md5.toString();
-}
 
 /**
  * Callback for promiscuous mode
@@ -27,19 +16,18 @@ void ICACHE_FLASH_ATTR Sniffer::sniffer_callback(void *buff, wifi_promiscuous_pk
         struct Sniffer::iee80211_header *header = (struct iee80211_header*) packet->payload;
         if (header->frame_control.type == TYPE_MANAGEMENT 
             && header->frame_control.subtype == SUBTYPE_PROBE_REQUEST) {
+              time_t now;
+              time(&now);
               // The second address in MAC header is the transmitting station.
               uint8_t *addr = header->address_2;
               char mac_addr[18];
               sprintf(mac_addr, "%02x:%02x:%02x:%02x:%02x:%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
-              String hashed_mac = md5(mac_addr);
-              time_t now;
-              time(&now);
-              sta_detected[hashed_mac] = now;
+              sta_detected[String(mac_addr)] = now;
               #if DEBUG == 1
                 Serial.println();
                 struct tm timeinfo;
                 localtime_r(&now, &timeinfo);
-                Serial.print( "MAC: " + String(mac_addr) + " - Hashed MAC: " + String(hashed_mac) );
+                Serial.print( "WiFi detection | MAC: " + String(mac_addr) );
                 Serial.print(" - Time: ");
                 Serial.print(&timeinfo);
                 Serial.println();
