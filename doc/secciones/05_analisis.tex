@@ -6,11 +6,11 @@
 
 Para poder usar una red Wi-Fi el primer paso que debe realizar un cliente es encontrar la red, para ello debe realizar un proceso de escaneo del medio para encontrar una red a la que unirse. Existen dos métodos de escaneo de redes Wi-Fi: pasivo y activo \cite{ieee80211_2016}. En el escaneo pasivo el cliente enciende el receptor y escanea en cada canal esperando que un punto de acceso se anuncie mediante un \textit{beacon frame}, el cliente almacena en un \textit{buffer} todos los \textit{bacons} recibidos para posteriormente extraer información del punto de acceso que lo emitió, este método no se considera muy eficiente. Para mejorar este proceso de descubrimiento la mayoría de dispositivos suelen utilizar el método de escaneó activo en que el cliente también analiza cada canal uno a uno pero en lugar de esperar a que la red se anuncie realiza un escaneo activo para encontrar la red, para ello envía \textit{Probe Request frames}, normalmente a la dirección broadcast (ff:ff:ff:ff:ff:ff), solicitando respuesta de un punto de acceso pudiendo indicar opcionalmente el identificador de la red (SSID) este último tipo se denomina \textit{directed probe request}, una vez emitido inicia un contador a cero y espera una respuesta, si no la recibe pasa al siguiente canal. El tiempo que espera una estación para recibir una respuesta está definido por cada fabricante pero suele rondar los 10 milisegundos, en cualquier caso, suele ser menor que el intervalo con el que los puntos de acceso emiten los \textit{beacons}.
 
-Cuando un punto de acceso detecta un \textit{Probe Request} con el identificador de su red responde al cliente con un \textit{Probe Response frame}
-%TODO añadir más información sobre la respuesta del punto de acceso
+Cuando un punto de acceso detecta un \textit{Probe Request} con el identificador de su red responde al cliente con un \textit{Probe Response frame}\\
+% añadir más información sobre la respuesta del punto de acceso
 
-En el escaneo pasivo la identidad del cliente es anónima mientras que el escaneo activo el cliente envía su dirección MAC que es un identificador único asignado por el fabricante, esto propicia que este método de descubrimiento pueda ser utilizado por terceros para detectar y registrar la presencia dispositivos en punto y tiempo concretos.
-%TODO contexto de que aporta al proyecto que exista este tipo de escaneo
+En el escaneo pasivo la identidad del cliente es anónima mientras que el escaneo activo el cliente envía su dirección MAC que es un identificador único asignado por el fabricante, esto propicia que este método de descubrimiento pueda ser utilizado por terceros para detectar y registrar la presencia dispositivos en punto y tiempo concretos.\\
+% contexto de que aporta al proyecto que exista este tipo de escaneo
 
 Las tramas \textit{Probe Request frames} utilizadas en el escaneo activo son un subtipo de las tramas de tipo \textit{Management} definidas en la subcapa MAC (\textit{Medium Access Control}) del estándar IEEE 802.11, este tipo de tramas se utilizan para funciones de supervisión como puede ser unirse o salir de una red.\\
 
@@ -58,7 +58,7 @@ El campo \textit{Type} permite determinar si se trata de una trama de tipo \text
 \label{table:tipos_trama}
 \end{table}
 
-Una vez identificada la trama como tipo \textit{Management} (00) los posibles valores que puede tomar el campo \textit{Subtype} son los mostrados en la figura \ref{fig:subtipos_trama}, en concreto el valor para las tramas del subtipo \textit{Probe Request} es el 0100.
+Una vez identificada la trama como tipo \textit{Management} (00) los posibles valores que puede tomar el campo \textit{Subtype} son los mostrados en la tabla \ref{table:subtipos_trama}, en concreto el valor para las tramas del subtipo \textit{Probe Request} es el 0100.
 
 \begin{table}[h!]
 \centering
@@ -88,6 +88,21 @@ Una vez identificada la trama como tipo \textit{Management} (00) los posibles va
 \end{table}
 
 Al identificar una trama de tipo \textit{Management} y subtipo \textit{Probe Request} podemos confirmar que el campo \textit{Address 2} contendrá la dirección de la estación que ha emitido el \textit{Probe Request}.
+
+\section{Bluetooth Low Energy}
+
+\textit{Bluetooth Low Energy} (BLE) es una tecnología de red inalámbrica originalmente diseñada por Nokia bajo el nombre Wibree y adoptada después por el  el \textit{Bluetooth Special Interest Group}, empezó como parte de la especificación Core del Bluetooth 4.0 y fue puesta en el mercado en 2010. Desde el principio el propósito de su desarrollo fue diseñar un estándar de radio con el menor consumo posible, enfocado a dispositivos de bajos coste y con un ancho de banda bajo. A pesar del poco tiempo que lleva en el mercado a tenido una gran adopción debido al gran crecimiento del mercado de dispositivos móviles y \textit{wearables}.\\
+
+% más datos sobre las posibildiades que ofrece BLE
+
+BLE trabaja con 40 canales en la banda ISM de 2.4 GHz cada uno separado por 2MHz y define dos tipos de transmisiones: datos y \textit{advertising}. 37 de estos canales se utilizan para las conexiones de datos y los últimos tres canales (37, 38 y 39) son usados como canales de \textit{advertising} para establecer nuevas conexiones o enviar datos de difusión.
+
+% Tipos de direcciones
+
+BLE solo tiene un formato de paquete y dos tipos de paquetes: datos y \textit{advertising}. Un paquete de \textit{advertising} está compuesto de una cabecera, que incluye entre otros datos la dirección bluetooth del dispositivo emisor, y una carga útil de datos de hasta 31 bytes. Estos paquetes se emiten por \textit{broadcast} a un ratio de entre 20 ms y 10.24 s.
+
+% explicación de interval y windows en el scaner
+
 
 
 \section{ESP8266}
