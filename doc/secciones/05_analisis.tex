@@ -2,226 +2,43 @@
 
 \begin{document}
 \chapter{Análisis del problema}
-\section{WiFi}
 
-Para poder usar una red Wi-Fi el primer paso que debe realizar un cliente es encontrar la red, para ello debe realizar un proceso de escaneo del medio para encontrar una red a la que unirse. Existen dos métodos de escaneo de redes Wi-Fi: pasivo y activo \cite{ieee80211_2016}. En el escaneo pasivo el cliente enciende el receptor y escanea en cada canal esperando que un punto de acceso se anuncie mediante un \textit{beacon frame}, el cliente almacena en un \textit{buffer} todos los \textit{bacons} recibidos para posteriormente extraer información del punto de acceso que lo emitió, este método no se considera muy eficiente. Para mejorar este proceso de descubrimiento la mayoría de dispositivos suelen utilizar el método de escaneó activo en que el cliente también analiza cada canal uno a uno pero en lugar de esperar a que la red se anuncie realiza un escaneo activo para encontrar la red, para ello envía \textit{Probe Request frames}, normalmente a la dirección broadcast (ff:ff:ff:ff:ff:ff), solicitando respuesta de un punto de acceso pudiendo indicar opcionalmente el identificador de la red (SSID) este último tipo se denomina \textit{directed probe request}, una vez emitido inicia un contador a cero y espera una respuesta, si no la recibe pasa al siguiente canal. El tiempo que espera una estación para recibir una respuesta está definido por cada fabricante pero suele rondar los 10 milisegundos, en cualquier caso, suele ser menor que el intervalo con el que los puntos de acceso emiten los \textit{beacons}.
+En este capítulo se realizará un análisis de las tecnologías y herramientas que han sido necesarias para cumplir los objetivos de este proyecto. Se diferenciaran dos secciones, en la primera se agruparán las tecnologías relacionadas con el sensor y en la segunda las relacionadas con el servidor central.\\
 
-Cuando un punto de acceso detecta un \textit{Probe Request} con el identificador de su red responde al cliente con un \textit{Probe Response frame}\\
-% añadir más información sobre la respuesta del punto de acceso
-
-En el escaneo pasivo la identidad del cliente es anónima mientras que el escaneo activo el cliente envía su dirección MAC que es un identificador único asignado por el fabricante, esto propicia que este método de descubrimiento pueda ser utilizado por terceros para detectar y registrar la presencia dispositivos en punto y tiempo concretos.\\
-% contexto de que aporta al proyecto que exista este tipo de escaneo
-
-Las tramas \textit{Probe Request frames} utilizadas en el escaneo activo son un subtipo de las tramas de tipo \textit{Management} definidas en la subcapa MAC (\textit{Medium Access Control}) del estándar IEEE 802.11, este tipo de tramas se utilizan para funciones de supervisión como puede ser unirse o salir de una red.\\
-
-Una trama MAC está compuesta de los siguientes componentes:
-\begin{enumerate}
-  \item Una cabecera MAC (\textit{MAC header}).
-  \item El cuerpo de la trama (\textit{Frame body}) determinado por el tipo y subtipo.
-  \item Un FCS (\textit{Frame Check Sequence}) que contiene un CRC de 32 bits.
-\end{enumerate}
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.8]{analisis/mac_frame_format}
-\caption{IEEE 802.11 MAC frame}
-\label{fig:ieee80211_mac_frame}
-\end{figure}
-
-Los primeros tres campos (\textit{Frame Control}, \textit{Duration/ID} y \textit{Address 1}) y el último campo (\textit{FCS}) constituyen el conjunto mínimo de campos necesarios y están presentes en todas las tramas. El resto de campos están presentes solo en determinados tipos y subtipos de tramas.\\
-
-Para el propósito de este proyecto solo necesitamos analizar la cabecera de la trama, en concreto los campos más relevantes son el \textit{Frame Control} que permitirá determinar el tipo de trama y el campo \textit{Address 2} que almacenará la dirección MAC de la estación emisora.\\
-
-Existen dos formatos diferentes para el campo \textit{Frame Control}, este formato viene determinado por los campos \textit{Type} y \textit{Subtype}, en este caso es de interés el formato para las tramas cuyo tipo es diferente de 1 o el subtipos es diferente de 6, en cuyo caso el campo \textit{Frame Control} será como el ilustrado en la Figura \ref{fig:ieee80211_frame_control_field}
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.8]{analisis/frame_control_field}
-\caption{IEEE 802.11 Frame Control field}
-\label{fig:ieee80211_frame_control_field}
-\end{figure}
-
-El campo \textit{Type} permite determinar si se trata de una trama de tipo \textit{Management}, en la Tabla \ref{table:tipos_trama} se muestran los posibles valores que puede tomar el campo.\\
-
-\begin{table}[h!]
-\centering
-\begin{tabular}{ |l|m{20em}| }
-\hline
-\textbf{Type} & \textbf{Descripción} \\
-\hline\hline
-00  & Management          \\ \hline
-01  & Control  \\ \hline
-10  & Data \\ \hline
-11 & Extension \\ \hline
-\end{tabular}
-\caption{Tipos de trama}
-\label{table:tipos_trama}
-\end{table}
-
-Una vez identificada la trama como tipo \textit{Management} (00) los posibles valores que puede tomar el campo \textit{Subtype} son los mostrados en la tabla \ref{table:subtipos_trama}, en concreto el valor para las tramas del subtipo \textit{Probe Request} es el 0100.
-
-\begin{table}[h!]
-\centering
-\begin{tabular}{ |l|m{20em}| }
-\hline
-\textbf{Subtype} & \textbf{Descripción} \\
-\hline\hline
-0000  & Association Request  \\ \hline
-0001  & Association Response \\ \hline
-0010  & Reassociation Request \\ \hline
-0011  & Reassociation Response \\ \hline
-0100  & Probe Request \\ \hline
-0101  & Probe Response \\ \hline
-0110  & Timing Advertisement \\ \hline
-0111  & Reserved \\ \hline
-1000  & Beacon \\ \hline
-1001  & ATIM \\ \hline
-1010  & Disassociation \\ \hline
-1011  & Authentication \\ \hline
-1100  & Deauthentication \\ \hline
-1101  & Action \\ \hline
-1110  & Action No Ack \\ \hline
-1111  & Reserved \\ \hline
-\end{tabular}
-\caption{Subtipos de trama para el tipo \textit{Management}}
-\label{table:subtipos_trama}
-\end{table}
-
-En las tramas de tipo de tipo \textit{Management} y subtipo \textit{Probe Request} el campo \textit{Address 2} contendrá la dirección de la estación que ha emitido el \textit{Probe Request}.\\
+En cada subsección se presentará un resumen de los requisitos que se buscaban en cada tecnología, un repaso de las soluciones disponibles en el mercado y finalmente la solución seleccionada junto a la motivación para su elección.\\
 
 
-\section{Bluetooth Low Energy}
-
-\textit{Bluetooth Low Energy} (BLE) es una tecnología de red inalámbrica originalmente diseñada por Nokia bajo el nombre Wibree y adoptada después por el  el \textit{Bluetooth Special Interest Group}, empezó como parte de la especificación Core del Bluetooth 4.0 y fue puesta en el mercado en 2010. Desde el principio el propósito de su desarrollo fue diseñar un estándar de radio con el menor consumo posible, enfocado a dispositivos de bajo coste y con un ancho de banda bajo que no requieran realizar conexiones de larga duración ni gran volumen de tráfico de datos. A pesar del poco tiempo que lleva en el mercado a tenido una gran adopción debido al gran crecimiento del mercado de dispositivos móviles y \textit{wearables}.\\
-
-La capa física de BLE trabaja con 40 canales en la banda ISM de 2.4 GHz cada uno separado por 2MHz y define dos tipos de transmisiones: datos y \textit{advertising} (anuncio). 37 de estos canales se utilizan para las conexiones de datos y los últimos tres canales (37, 38 y 39) son usados como canales de \textit{advertising} para establecer nuevas conexiones o enviar datos de difusión. Se utilizan 3 canales para reducir la posibilidad de interferencia ya que estas frecuencias se comparten con otras tecnologías como el WiFi.
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.35]{analisis/ble_physical_channels}
-\caption{Distribución de canales de la capa física del protocolo BLE \cite{townsend2014getting}}
-\label{fig:ble_physical_channels}
-\end{figure}
-
-Para analizar en que forma podemos obtener la identificación de los dispositivos BLE es necesario analizar la capa de enlace, esta subcapa dentro la capa de Controlador define como dos dispositivos pueden transmitir información entre sí y determinados tipo de paquetes definidos en esta capa contendrán la dirección bluetooth del dispositivo emisor. La capa de enlace de BLE está definida en términos de máquinas de estado compuesta de cinco estados:  \textit{standby},  \textit{advertising},  \textit{scanning},  \textit{innitiating} y  \textit{connection}. La detección de dispositivos se da en los estados de \textit{advertising} y \textit{scanning}, cuando un dispositivo está en modo \textit{advertising} se le denomina \textit{advertiser} o anunciante, este dispositivo utiliza los tres canales de \textit{advertising} para anunciarse o enviar información, por otra parte tenemos los dispositivos en estado  \textit{scanning} denominados scanner o escáner, su propósito es permanecer a la escucha de paquetes de anuncio de anunciantes a su alrededor, pudiendo solicitarles más información. Existen también los roles maestro y esclavo utilizados cuando los dispositivos establecen una conexión bidireccional después del proceso de descubrimiento.\\
-
-En está capa se definen dos tipos de paquetes: datos y \textit{advertising}. La principal diferencia entre estos paquetes es que los paquetes de datos solo son comprensibles para los dos dispositivos que han establecido una conexión previamente, llamados dispositivos esclavo y maestro, mientras que los paquetes de \textit{advertising} pueden estar dirigidos a un dispositivo en concreto o ser emitidos en \textit{broadcast} a cualquier dispositivo que esté escuchando, este hecho hace que este último tipo de paquetes sean de especial interés para el propósito de este proyecto, respecto al propósito de este tipo de paquetes se pueden diferenciar dos motivaciones:\\
+\section{Sensor}
+\subsection{SoC}
+Los principales requisitos que debe cumplir la plataforma elegida son:
 
 \begin{itemize}
-  \item Descubrir dispositivo esclavos y conectarse a ellos para establecer una comunicación bidireccional.
-  \item Retransmitir por \textit{broadcast} datos para aplicaciones que no necesitan establecer una conexión con su consecuente sobrecarga.
+  \item Conectividad WiFi y Bluetooth.
+  \item Bajo coste (< 15€).
+  \item Bajo consumo energético (<250 mA).
+  \item Reducidas dimensiones.
 \end{itemize}
 
-Este segundo tipo de envío garantiza que un dispositivo BLE puede estar emitiendo paquetes de \textit{advertising} en cualquier momento y no solo en el proceso de descubrimiento de otros dispositivos, por ejemplo, un reloj o pulsera inteligente transmitiendo el número de pasos, esto nos permite realizar una detección de dispositivos con un menor coste comunicacional respecto a escanear todos los paquetes en el medio.\\
-
-Cuando un dispositivo BLE está en modo \textit{advertising} cada paquete es enviado por los tres canales \textit{advertising} de forma secuencial, el intervalo de tiempo entre cada conjunto de estas trasmisiones está compuesto de un intervalo fijo más un intervalo aleatorio con el fin de minimizar las colisiones, el intervalo fijo se puede fijar entre 20 ms y 10.24 s y el aleatorio va desde los 0 ms hasta los 10ms, una mayor frecuencia garantiza una mayor probabilidad de que un escáner los detecte pero esto también se traduce en un mayor consumo. El ajuste de este parámetro es crucial debido al funcionamiento del proceso de descubrimiento de BLE, como se ha comentado anteriormente se utilizan tres canales para emitir con la intención de minimizar de interferencia, de esta forma el emisor se anuncia saltando entre estos tres canales y dado que este no está sincronizado con el dispositivo escáner, para que un paquete de \textit{advertising} sea recibido el dispositivo anunciante y el escáner deben coincidir en el mismo canal.\\
-
-En este proceso intervienen dos parámetros:  \textit{scan interval} y  \textit{scan window} fijados en el dispositivos escáner, estos definen cada cuanto y durante cuanto tiempo el dispositivo escáner estará escuchando. Un buen buen ajuste de estos parámetros junto al intervalo de \textit{advertising} son cruciales para incrementar la probabilidad de recepción de los paquetes sin producir un gran consumo energético.\\
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.35]{analisis/ble_advertising_and_scanning}
-\caption{Proceso de \textit{advertising} y escaneo en el protocolo BLE \cite{townsend2014getting}}
-\label{fig:ble_advertising_and_scanning}
-\end{figure}
-
-BLE define un formato de paquete único en la capa de enlace para datos y anuncio, este paquete consta de cuatro componentes: \textit{preamble}, \textit{access address}, \textit{Protocol Data Unit} (PDU) y \textit{CRC}. El PDU es el que determinará si se trata de un paquete para el canal de datos o para el canal de anuncio, por ejemplo, los paquetes para el canal de anuncio contienen una cabecera de 16 bits y un \textit{payload} de tamaño variable que vendrá especificado en la cabecera (Figura \ref{fig:ble_advertising_pdu}). \\
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=1]{analisis/ble_advertising_pdu}
-\caption{Formato de paquete único de la capa de enlace y PDU de canal \textit{advertising}}
-\label{fig:ble_advertising_pdu}
-\end{figure}
-
-La cabecera de los paquetes de canal de \textit{advertising} se componen de 6 campos (Figura \ref{fig:ble_advertaising_pdu_header}), el campo \textit{PDU Type} indica el tipo de PDU y puede tomar los valores que se muestran en la Tabla \ref{table:advertising_channel_pdu_type}. Los campos \textit{TxAdd} y \textit{TxAdd} contienen información específica dependiendo del tipo de PDU, el campo \textit{length} indica el tamaño del \textit{payload} en octetos y el campo RFU está reservado para futuros usos.\\
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=1]{analisis/ble_advertaising_pdu_header}
-\caption{Cabecera de PDU del canal de \textit{advertising}}
-\label{fig:ble_advertaising_pdu_header}
-\end{figure}
-
-
-\begin{table}[h!]
-\centering
-\begin{tabular}{ |l|m{12em}| }
-\hline
-\textbf{Tipo de PDU} & \textbf{Nombre de paquete} \\
-\hline\hline
-0000  & ADV\_IND  \\ \hline
-0001  & ADV\_DIRECT\_IND  \\ \hline
-0010  & ADV\_NONCONN\_IND \\ \hline
-0011 & SCAN\_REQ \\ \hline
-0100 & SCAN\_RSP \\ \hline
-0101 & CONNECT\_REQ \\ \hline
-0110 & ADV\_SCAN\_IND \\ \hline
-0111-1111 & Reserved \\ \hline
-\end{tabular}
-\caption{Codificación para tipos de PDU definida en la cabecera de los PDUs de canal \textit{advertising}}
-\label{table:advertising_channel_pdu_type}
-\end{table}
-
-Este análisis se centrará en un subconjunto de los PDUs mostrados en la Tabla \ref{table:advertising_channel_pdu_type}, los de tipo \textit{advertising}, estos son enviados por la capa de enlace en los estados de \textit{Advertising} y recibidos por la capa de enlace cuando se está en estado \textit{Scanning} o \textit{Initiating}. Este subconjunto está formado por los cuatro tipos definidos en la Tabla \ref{table:advertising_pdu_type}\\
-
-Este tipo de PDU se pueden clasificar según tres propiedades:
+Además de estos requisitos se definen otros aspectos no indispensables pero deseables:
 
 \begin{itemize}
-  \item Conectable: Un escáner puede iniciar una conexión tras recibir un paquete de este tipo, en caso de no poseer esta propiedad el paquete estará destinado unicamente a difusión.
-  \item Escaneable: Un escáner puede emitir una solicitud de escaneo como respuesta a un paquete de este tipo solicitando más información al anunciante.
-  \item Dirigido: Un paquete de este tipo está dirigido a un escáner en particular y no contiene datos de usuario en el payload solo la dirección del escáner destino, por tanto tanto los paquetes con esta propiedad son a su vez conectables.
+  \item Facilidad de programación.
+  \item Madurez en el mercado.
+  \item Buena documentación.
+  \item Gran comunidad de usuarios.
 \end{itemize}
 
-\begin{table}[h!]
-\centering
-\begin{tabular}{ |l|l|l|l| }
-\hline
-\textbf{Tipo de PDU} & \textbf{Conectable} & \textbf{Escaneable} & \textbf{Dirigido} \\
-\hline\hline
-ADV\_IND  & Sí  & Sí & No \\ \hline
-ADV\_DIRECT\_IND  & Sí & No & Sí \\ \hline
-ADV\_NONCONN\_IND  & No & No & No \\ \hline
-ADV\_SCAN\_IND &  No& Sí & No \\ \hline
-\end{tabular}
-\caption{Tipos de PDUs de \textit{advertising}}
-\label{table:advertising_pdu_type}
-\end{table}
-
-En base a estas propiedades, resultan de interés para la detección de dispositivos los paquetes no dirigidos ya que se emiten en difusión, estos son los PDU de tipo ADV\_IND, ADV\_NONCONN\_IND y ADV\_SCAN\_IND. Los ADV\_IND son para anuncio genérico, se utilizan para anunciarse ante dispositivos centrales y que estos puedan iniciar el proceso de conexión, los ADV\_NONCONN\_IND son utilizados cuando el dispositivo anunciante no quiere establecer una conexión si no simplemente enviar información por difusión mientras que los ADV\_SCAN\_IND son utilizados para enviar información en respuesta a una solicitud de escaneo.\\
-
-El formato del \textit{payload} de estos paquetes se describe en Figura \ref{fig:ble_advertising_pdu_payload_solo}, constan de dos campos: \textit{AdvA} y \textit{AdvData}, el primero contiene la dirección Bluetooth del anunciante y el segundo puede contener datos publicitados por el anunciante.\\
+\subsubsection{Arduino}
+Una de las primeras plataformas analizadas fue Arduino por su gran popularidad, estas placas empezaron su andadura en el 2005 y han cosechado una gran comunidad, pero hasta hace relativamente poco no ofrecían soluciones con conectividad WiFI y Bluetooth integrada si no que se basaban en el uso de módulos de expansión (\textit{shields}) para dotar a sus placas de conectividad inalámbrica lo cual encarecía el coste final, pero en 2018 decidieron cambiar con la placa ARDUINO MKR WIFI 1010 \cite{arduino_mkr_wifi_1010}, utiliza el SoC ESP32 fabricado por U-BLOX y dispone de conectividad WiFi y Bluetooth integrada en un empaquetado de solo 61.5x25 mm, más tarde en 2019 lanzaron el modelo ARDUINO NANO 33 IOT \cite{arduino_nano_33_iot} (Figura \ref{fig:arduino_nano_33_iot}) con prácticamente las mismas características y algunas mejoras como la inclusión de un acelerómetro pero sacrificando el conector de batería y la compatibilidad con los \textit{shields} en favor de un menor tamaño (48 × 18 mm) y menor coste. Esta última solución encajaba con la mayoría de los requisitos excepto con el coste, tiene un precio de aproximadamente 25€ que queda muy por encima del objetivo de coste, además su poca madurez en el mercado juega también en su contra.
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=1]{analisis/ble_advertising_pdu_payload_solo}
-\caption{Paylod del PDU de \textit{advertising}}
-\label{fig:ble_advertising_pdu_payload_solo}
+\includegraphics[scale=0.5]{analisis/arduino_nano_33_iot}
+\caption{ARDUINO NANO 33 IOT}
+\label{fig:arduino_nano_33_iot}
 \end{figure}
 
-Antes de pasar a analizar el campo \textit{AdvA} conviene
-Una dirección Bluetooth, a veces llamada dirección Bluetooth MAC y definida en el estándar como \textit{BD\_ADDR}, es un valor de 48 bits normalmente representado seis bloques de dos caracteres hexadecimales al igual que ene el estándar Ethernet. El estándar define dos tipos de direcciones:
-
-\begin{itemize}
-  \item Pública: Es una dirección definida según el estándar EEE 802-2001 y se obtiene de la autoridad de registro del IEEE, al igual que ocurre con el estándar Ethernet esta viene fijada de fábrica y nunca cambia.
-  \item Aleatoria: Esta dirección puede preprogramarse en el dispositivo (estáticas) o generarse dinámicamente (privadas) en tiempo de ejecución. Existen tres tipos: estática, privada no resoluble y privada resoluble.
-\end{itemize}
-
-Este último grupo puede generar complicaciones a la hora de rastrear un dispositivo, en el caso de las direcciones dinámicas estáticas no habría problema ya que estas pueden ser asignadas para toda la vida útil del dispositivo o en el peor de los casos regenerarse cuando el dispositivo se reinicia, sin embargo en el caso de las direcciones generadas dinámicamente puede suponer un problema dado que se regeneran continuamente, por ejemplo en el caso de los dispositivos iOS se genera una nueva cada 15 minutos, esto puede suponer un problema para el trazado de rutas de larga duración.
-
-Para discernir que tipo de dirección contiene el campo \textit{AdvA} del \textit{payload} es necesario analizar el campo \textit{TxAdd} de la cabecera de este tipo de PDU que se presentaba en la Figura \ref{fig:ble_advertaising_pdu_header}, el valor de este campo permite conocer si se trata de una dirección pública (TxAdd = 0) o aleatoria (TxAdd = 1). Para este proyecto se ha decidido recoger todos los tipos de direcciones ya que aunque las direcciones aleatorias dinámicas puedan introducir algo de ruido en posible modelos generados a partir de estos datos sigue siendo de utilidad para trayectos cortos.
-
-
-
-\section{Microcontrolador}
-
-%TODO Añadir el resto de placas e introducción
-Bajo coste.
-Bajo consumo energético.
-Reducidas dimensiones.
-Conectividad bluetooth.
-
-\noindent{\textbf{Espressif Systems SoCs}}\\
+\subsubsection{Espressif Systems SoCs}
 Espressif es una compañía fundada en 2008 en China y con sede en Shanghai enfocada en el desarrollo de soluciones IoT que desarrolla \textit{chipsets} y módulos WiFi y/o Bluetooth/BLE de pequeñas dimensiones con un gran rendimiento, bajo consumo y coste enfocados principalmente a dotar de conectividad a los productos de otras compañías. Son los creadores de los populares SoCs ESP8266 y ESP32 que además tener una gran penetración en el mercado de IoT han tenido un gran éxito en la comunida maker.
 
 \noindent{\textbf{ESP8266}}\\
@@ -240,7 +57,7 @@ Integra un microcontrolador Tensilica L106 de 32 bits (RISC) de bajo consumo que
 \label{fig:esp8266_soc_pinout}
 \end{figure}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \begin{tabular}{ |l|m{20em}| }
 \hline
@@ -311,20 +128,14 @@ Otros módulos de desarrollo no usan un módulo intermediario, en su lugar incor
 
 Existen una gran variedad de estos módulos de diferentes fabricantes, algunos de los más conocidos son:  Feather de la empresa Adafruit Industries, ESP8266 Thing de la empresa SparkFun Electronics y NodeMCU del fabricante Lolin. Hay un gran rango de precios desde los 3€ del modelo de WEMOS a los 15€ del modelo de SparkFun \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}\cite{sparkfun_thing_official_page}.\\
 
+\pagebreak
 
 \noindent{\textbf{ESP32}}\\
-El ESP32, es una familias de SoC's de bajo coste y consumo con WiFi y Bluetooth modo dual integrado, también diseñado por Espressif Systems \cite{esp32_overview} es el sucesor del ESP8266.\\
+El ESP32, es una familia de SoC's de bajo coste y consumo con WiFi y Bluetooth modo dual integrado, también diseñado por Espressif Systems \cite{esp32_overview} es el sucesor del ESP8266.\\
 
 La familia de SoCs ESP32 dispone de una gran variedad de modelos la mayoría en un formato QFN de 5x5 mm y 6x6 mm (Figura \ref{fig:esp32_soc_pinout}) a excepción de la familia PICO que usan un encapsulado LGA de 7x7 mm, todos los modelos tienen 48 pines y utilizan microprocesadores Xtensa 32-bit LX6 en versiones de un solo núcleo dos dependiendo del modelo, ambas versiones pueden trabajar en frecuencias desde 80 MHz hasta 240MHz. Al desarrollar estos nuevos SoCs Espressif les doto de características ideales para dispositivos wearables como el soporte para BLE, sensores táctiles capacitivos o modo de sueño para ahorro energético con el que consume menos de 5  uA. El precio de estos SoCs oscila entre 0,89€ y 3€ en los distribuidores oficiales de Espressif \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}.\\
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.3]{analisis/esp32_soc_pinout}
-\caption{ESP32 SoC Pinout  \cite{esp32_soc_pinout}.}
-\label{fig:esp32_soc_pinout}
-\end{figure}
-
-\begin{table}[h!]
+\begin{table}[H]
 \centering
 \begin{tabular}{ |l|m{20em}| }
 \hline
@@ -344,6 +155,13 @@ Bluetooth           &  Bluetooth v4.2 BR/EDR y BLE dual-mode  \\ \hline
 \label{table:caracteristicas_esp32}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.3]{analisis/esp32_soc_pinout}
+\caption{ESP32 SoC Pinout  \cite{esp32_soc_pinout}.}
+\label{fig:esp32_soc_pinout}
+\end{figure}
+
 Al igual que su predecesor se comercializa en tres formatos: SoC, módulos y DevKits. Esta vez Espressif aposto desde el principio por comercializar sus propios módulos y desarrollo una gran variedad de módulos, actualmente comercializa 13 variantes agrupadas en tres familias: ESP32-SOLO, ESP32-WROOM y ESP32-WROVER \cite{espressif_products_ordering_information}. La familia SOLO integra SoCs de un solo núcleo mientras las familias WROOM y WROVER utilizan doble núcleo, además esta última tiene memoria SPIRAM ideal para aplicaciones que requieren más memoria como productos AIoT. Con unas dimensiones que van desde los 18.00×25.50×3.10 mm hasta los 18.00×31.40×3.30 mm estos módulos contienen una memoria flash (4, 8 y 16 MB) y antena impresa PCB o conector IPEX para poder conectar antenas de mayor potencia. El precio de estos módulos oscila entre los 1,80€ hasta los 4,50€ dependiendo del modelo \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}.\\
 
 \begin{figure}[H]
@@ -362,9 +180,9 @@ Espressif también ofrece una gran variedad de DevKits para todo tipo de aplicac
 \label{fig:esp32_devkitc_32u}
 \end{figure}
 
-\noindent{\textbf{Elección}}\\
+\subsubsection{Elección}
 
-Para el desarrollo de este proyecto se han utilizado módulos de desarrollo ya que facilitan un desarrollo rápido y cómodo al permitir programar y alimentar el módulo fácilmente a través de una conexión USB, aunque no es habitual utilizar este tipo de módulos en aplicaciones reales ya que encarecería el coste del despliegue al incluir componentes que no serían necesarios una vez desplegados, por ejemplo, no es necesario que los dispositivos ya desplegados incluyan un adaptador USB-Serial ya que normalmente solo serán programados inicialmente y en caso de ser necesario actualizarlos se podría usar un adaptador externo o realizar actualizaciones vía OTA. Una vez completado el desarrollo lo normal es utilizar módulos como el ESP-12 o un ESP32-WROOM con un menor tamaño y consumo, aunque si no es un despliegue de grandes magnitudes, por ejemplo, para realizar investigaciones usar un módulo de desarrollo podría seguir siendo una buena opción ya que ahorraría crear el diseñó de la placa de alimentación que necesitaría un módulo.
+Para el desarrollo de este proyecto se han utilizado módulos de desarrollo ya que facilitan un desarrollo rápido y cómodo al permitir programar y alimentar el módulo fácilmente a través de una conexión USB, aunque no es habitual utilizar este tipo de módulos en aplicaciones reales ya que encarecería el coste del despliegue al incluir componentes que no serían necesarios una vez desplegados, por ejemplo, no es necesario que los dispositivos ya desplegados incluyan un adaptador USB-Serial ya que normalmente solo serán programados inicialmente y en caso de ser necesario actualizarlos se podría usar un adaptador externo o realizar actualizaciones vía OTA. Una vez completado el desarrollo lo normal es utilizar módulos como el ESP-12 o un ESP32-WROOM con un menor tamaño y consumo, aunque si no es un despliegue de grandes magnitudes, por ejemplo, para realizar investigaciones usar un módulo de desarrollo podría seguir siendo una buena opción ya que ahorraría crear el diseñó de la placa de alimentación que necesitaría un módulo.\\
 
 Para el desarrollo de este proyecto en un principio se eligió el módulo de desarrollo WEMOS D1 Mini Pro basado en el SoC ESP8266, con unas dimensiones de 34.2 mm x 25.6 mm y un peso de 3 g es una de las placas más pequeñas del mercado, con un tamaño ligeramente más grande que un módulo ESP-12 (24.0 mm × 16.0 mm) incorpora un conversor P2104 USB-TO-UART, antena cerámica incorporada memoria flash de 16 MB y un regulador de tensión que permite alimentarlo a 5 V a través de un micro-USB. Una de los principales motivos para la elección de este módulo de desarrollo fue su reducido tamaño, la posibilidad de conectar una antena externa para mejorar el alcance mediante un conector de tipo U.FL y su reducido precio de tan solo 3€ \cite{lolin_official_store}. \\
 
@@ -388,13 +206,13 @@ Como punto negativo este módulo no cuenta con Bluetooth integrado por lo que pa
 %https://github.com/mcauser/Fritzing-Part-WeMos-D1-mini-Shields
 \end{figure}
 
-Por las razones expuestas inicialmente se decidió utilizar el SoC ESP8266 junto con el módulo Bluetooth HC-05 ya que cumplía con el requisito del bajo coste mejor que ninguna de las opciones incluso teniendo en cuenta el hecho de tener que adquirir el módulo Bluetooth por separado, pero durante el desarrollo del proyecto se apreció que en la valoración inicial no se había tenido en cuenta el coste que supondría el proceso de integración de estos módulo, aunque aparentemente una operación sencilla como es el soldado o cableado de estos dos módulos supondría un gran coste en mano de obra para realizar grandes despliegues. Este motivo llevo a replantear la opción del ESP32 ya que este SoC dispone de conectividad Bluetooth nativa, inicialmente fue descartado por tener un mayor coste pero al tener en cuenta los costes de integración de la primera elección quedan igualados en este punto, también simplificaría el diseño al poder configurar el Bluetooth sin necesidad de utilizar comandos AT, además dispone de un procesador más potente y de doble núcleo. Por todo lo expuesto finalmente se eligió el SoC ESP32 como solución para este proyecto.\\
+Por las razones expuestas inicialmente se decidió utilizar el SoC ESP8266 junto con el módulo Bluetooth HC-05 ya que cumplía con el requisito del bajo coste mejor que ninguna de las opciones incluso teniendo en cuenta el hecho de tener que adquirir el módulo Bluetooth por separado, pero durante el desarrollo del proyecto se apreció que en la valoración inicial no se había tenido en cuenta el coste que supondría el proceso de integración de estos módulo, aunque aparentemente una operación sencilla como es el soldado o cableado de estos dos módulos supondría un gran coste en mano de obra para realizar grandes despliegues. Este motivo llevo a replantear la opción del ESP32 ya que este SoC dispone de conectividad Bluetooth nativa, inicialmente fue descartado por tener un mayor coste pero al tener en cuenta los costes de integración de la primera elección quedan igualados en este punto, también simplificaría el diseño al poder configurar el Bluetooth sin necesidad de utilizar comandos AT, además dispone de un procesador más potente y de doble núcleo. Por todo lo expuesto finalmente se eligió el SoC ESP32 como solución para este proyecto, en concreto se utilizará le módulo de desarrollo ESP 32 DevKitC de Espressif.\\
 
-\section{Framework}
+\subsection{Framework}
 
 Actualmente existen multitud de \textit{frameworks} de desarrollo para el SoC ESP32, basados en una gran variedad de lenguajes como: C, C++, Python, JavaScript o Lua. A continuación se analizan algunos de los  \textit{frameworks} más usados.\\
 
-\noindent{\textbf{Espressif IoT Development Framework (ESP-IDF)}}\\
+\subsubsection{Espressif IoT Development Framework (ESP-IDF)}
 ESP-IDF es el \textit{framework} de desarrollo oficial creado por Espressif Systems para el SoC ESP32. Está escrito principalmente en C  y está basado en el sistema operativo en tiempo real FreeRTOS. Es uno de los más usados y tiene una gran comunidad siendo fácil encontrar ayuda en sus foros oficiales, además cuenta con una extensa documentación oficial. La mayoría de \textit{frameworks} que trabajan sobre C o C++ están construidos sobre la API de ESP-IDF. Para trabajar con el solo es necesaria la toolchain propia, algunas herramientas de construcción (CMake y Ninja) y por supuesto el propio paquete ESP-IDF que contiene la API y algunos scripts para facilitar el uso de la toolchain. Con estas herramientas y un simple editor de texto ya podríamos empezar a crear aplicaciones para el ESP32 aunque es recomendable utilizar algún IDE como PlatformIO IDE.\\
 
  Las principales ventajas de este \textit{framework} es que al ser el oficial del fabricante es en el que primero obtendremos nuevas funcionalidades y parches de seguridad, otra de sus ventajas es que al tener un menor nivel de abstracción que permite un acceso a más bajo nivel que el resto, esto a su vez es su desventaja ya resulta en un código más extenso, a continuación podemos ver un ejemplo de un código para hacer parpadear un led.\\
@@ -423,7 +241,7 @@ void app_main(void)
 \end{lstlisting}
 \end{minipage}
 
-\noindent{\textbf{Arduino}}\\
+\subsubsection{Arduino}
 Arduino es una plataforma de código abierto utilizada para la construcción de proyectos de electrónica, dentro de está plataforma encontramos el lenguaje de programación Arduino y el entorno de desarrollo IDE. Arduino es un lenguaje potente y sencillo que permite desarrollar proyectos en C/C++ sin requerir grandes conocimientos de electrónica. Gracias a su espíritu de código abierto ha crecido una gran comunidad a su alrededor que ha contribuido creando todo tipo de librerías y herramientas.\\
 
 Este lenguaje fue inicialmente diseñados para utilizar sobre las placas Arduino pero con su creciente popularidad se han realizado multitud de adaptaciones para usarlo en otros microcontroladores como es el caso del ESP32, esta adaptación esta basada en ESP-IDF y fue realizada por el propio fabricante del SoC Espressif Systems, permite un mayor nivel de abstracción y acceso a una gran cantidad de librerías sin perder acceso a funcionalidades a más bajo nivel usando funciones del ESP-IDF ya que las librerías están integradas en la compilación de la librería de Arduino.\\
@@ -445,7 +263,7 @@ void loop() {
 \end{lstlisting}
 \end{minipage}
 
-\noindent{\textbf{MicroPython}}\\
+\subsubsection{MicroPython}
 MicroPython es una implementación del lenguaje de programación Python 3 que incluye una pequeño subconjunto de la biblioteca estándar de Python y está optimizada para ejecutarse en microcontroladores. Originalmente fue diseñado para ejecutarse sobre la placa PyBoard pero actualmente se ha adaptado a un amplio número de arquitecturas. No dispone de un IDE propio pero hay varias alternativas como uPyCraft, Thonny o  VSCode con la extensión PyMark.\\
 
 Su principal ventaja además de portar la simplicidad del lenguaje Python al mundo de los microcontroladores es que una vez cargado en la placa podemos ejecutar comandos en el ESP32 directamente a través del serial como si fuera una consola python normal y corriente, esto agiliza mucho el proceso de desarrollo ya que permite realizar pruebas sin tiempos de compilación ni de subida a la placa. Su mayor desventaja es que no permite acceder  a funciones a bajo nivel por ejemplo para las funcionalidades WiFi y no dispone de tantas librerías como las anteriores opciones.\\
@@ -463,7 +281,7 @@ while True:
 \end{lstlisting}
 \end{minipage}
 
-\noindent{\textbf{NodeMCU}}\\
+\subsubsection{NodeMCU}
 NodeMCU es una plataforma de código abierto que incluye tanto el firmware basado en LUA como un módulo de desarrollo homónimo basado en los SoCs de Espressif, el lenguaje inicialmente se desarrolló para las placas NodeMCU pero ahora se puede ejecutar en cualquier módulo ESP.\\
 
 Su principal característica es que usa un modelo de programación similar a Node.js basado en la  asincronía  y en arquitectura dirigida por eventos, la mayoría de sus funciones tienen un parámetro para funciones \textit{callback}. Como desventaja LUA no es un lenguaje muy popular por lo que normalmente requerirá que el desarrollador tenga que aprender un nuevo lenguaje desde cero, además no dispone de un IDE por lo que empezar a trabajar con el no es tan sencillo como en el resto de opciones.\\
@@ -475,7 +293,6 @@ tmr.alarm(0,1000,1,function()
 if lighton==0 then
     lighton=1
     led(512,512,512)
-    -- 512/1024, 50% duty cycle
 else
     lighton=0
     led(0,0,0)
@@ -484,7 +301,7 @@ end)
 \end{lstlisting}
 \end{minipage}
 
-\noindent{\textbf{Mongoose OS}}\\
+\subsubsection{Mongoose OS}
 Mongoose OS es una plataforma de desarrollo de código abierto enfocada a la integración con las plataformas cloud IoT como Amazon, Azureo Google, también dispone de una versión empresarial con licencia comercial que dispone de más funcionalidades la versión libre. Su propósito es ser un entorno completo para la creación de prototipos, desarrollo y gestión de dispositivos conectados.\\
 
 Una de sus principales ventajas es que permite programar tanto en JavaScript como en C, además dispone de un IDE muy completo con interfaz web. Su principal desventaja es que algunas librerías son de código cerrado y es necesario adquirir una licencia para poder utilizarlas. También cabe destacar que aunque la opción de programar con JS pueda resultar atractiva para un prototipado rápido durante el desarrollo no es recomendable usarlo en producción ya que tiene una mayor sobrecarga en consumo de memoria y CPU.\\
@@ -502,16 +319,97 @@ GPIO.blink(pin, 1000, 1000);
 \end{lstlisting}
 \end{minipage}
 
-\noindent{\textbf{Elección}}\\
+\subsubsection{Elección}
 
 Tras analizar los \textit{frameworks} expuestos anteriormente se optó por elegir Arduino como solución para este proyecto, las razones para esta elección han sido su gran facilidad de uso  y sencillez, dispone de una gran comunidad y trayectoria por lo que es muy fácil encontrar información y respuestas a cualquier duda, dispone de una gran cantidad de librerías que facilitaran el trabajo y además a pesar de su gran nivel de abstracción podemos seguir accediendo a bajo nivel gracias a la integración con ESP-IDF, requisito necesario en este proyecto dada la necesidad de utilizar las funciones de monitorización del tráfico WiFi no disponibles en la mayoría de \textit{frameworks}.
 
-% [1]https://www.espressif.com/en/products/hardware/esp8266ex/overview
-% [2]https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf
-% [3]https://www.espressif.com/en/products/hardware/esp-wroom-02/overview
+\section{Servidor central}
 
+En esta sección se describirán las herramientas elegidas para el desarrollo del servidor central encargado de recibir y almacenar las detecciones de los sensores a través de una API REST y de mostrar estas detecciones de una forma amigable a través de una interfaz web. Para ello has sido necesario seleccionar un \textit{framework} web que nos permita desarrollar la aplicación web y una base de datos que nos provea de persistencia para almacenar las detecciones.
 
-% FIGURAS
-% [1] https://raw.githubusercontent.com/acrobotic/Ai_Docs/master/pinouts/esp8266_soc/esp8266_soc-01.png
-% [2] ESP-01 Pinout https://github.com/acrobotic/Ai_Docs/blob/master/pinouts/esp8266_esp01/esp8266_esp01-01.png
+\subsection{Framework web}
+
+En la actualidad existen muchas opciones para crear aplicaciones web en multitud de lenguajes de programación, algunos de los más conocido son Ruby on Rails (Ruby), Laravel (PHP), Spring (Java) y Django (Python). En la búsqueda de esta herramienta el principal requisito que se buscaba era la posibilidad de desarrollar en algún lenguaje ya conocido de forma que la curva de aprendizaje fuera menor y permitiera un desarrollo más rápido, ademas se planteaban otros requisitos deseables:
+
+\begin{itemize}
+  \item Simplicidad.
+  \item Ligero.
+  \item Facilidad para desarrollo de API REST.
+  \item Agnóstico respecto a la base de datos a utilizar.
+  \item Compatible con modelo MVC.
+  \item Facilidad para su despliegue mediante contenedores.
+  \item Buena documentación y madurez en el mercado.
+\end{itemize}
+
+El principal requisito condujo a analizar los principales entornos de desarrollo para Python, estos son Django y Flask, ambos tienen una gran trayectoria y una gran comunidad detrás, además el haber trabajado anteriormente con ellos proporciona una visión más detallada de su funcionamiento, ventajas y desventajas.\\
+
+Django es con diferencia el \textit{framework} basado en Python más popular. Está enfocado a la creación de aplicaciones web complejas basándose en el patrón de diseño MVC, sigue la filosofía de \textquote{baterías incluidas}, esto quiere decir que intenta proveer todas las herramientas que puedan ser necesarias \textquote{de fábrica}, para ello incluye una gran cantidad de herramientas como una potente interfaz de administración, su propio lenguaje de plantillas y un sistema de autenticación de usuarios. Provee una interfaz para interactuar con las bases de datos aunque su compatibilidad es limitada (PostgreSQL, MariaDB, MySQL, Oracle y SQLite).\\
+
+Flask es un \textit{microframework} web escrito en Python que permite crear aplicaciones web de una forma rápida y sencilla. La denominación de \textit{microframework} se debe a su baja dependencia de librerías externas, de base sus únicas dependencias son la librería de utilidades WSGI Werkzeug y el motor de plantillas Jinja 2. Pero a pesar de su sencillez nos permite escalar hacía aplicaciones más complejas con la adición de extensiones que nos permiten añadir nuevas funcionalidades, por ejemplo, flask-Sqlalchemy para generar modelos de datos o flask-WTF para generar formularios. Este tipo de diseño nos proporciona un entorno de desarrollo muy ligero y al haber poca dependencia minimiza el trabajo de actualización y control de errores de seguridad ya que solo utilizaremos las extensiones que realmente necesitamos, a diferencia de otros \textit{frameworks} como Django que incluyen utilidades que probablemente no lleguemos a utilizar.\\
+
+Tras analizar estas dos opciones la solución elegida ha sido el \textit{microframework} Flask principalmente por su facilidad y simplicidad ya que lo convierten en una solución ideal para aplicaciones web pequeñas como es el caso de este proyecto, también nos permite una mayor flexibilidad en el diseño mediante el uso de extensiones, además permite crear APIs de una forma más sencilla y con menos código. Otra ventaja sobre Django es que gracias a su diseño minimalista en líneas generales tiene un mejor rendimiento en tiempos de respuesta, algo fundamental en un proyecto como este en el que se realizarían una gran cantidad de peticiones. Otras características que han propiciado esta elección son las siguientes:
+
+\begin{itemize}
+  \item Servidor de desarrollo integrado y depurador.
+  \item Soporte integrado para pruebas unitarias.
+  \item Motor de plantilla Jinja 2.
+  \item Basado en Unicode.
+  \item Agnóstico respecto a la base de datos.
+  \item Compatible con WSGI.
+  \item Documentación extensa.
+\end{itemize}
+
+En el siguiente código podemos ver un ejemplo de su sencillez, con menos de diez lineas de código podemos desplegar una sencilla aplicación web que nos devuelve el clásico \textit{Hello, World!}\\
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python, caption=Ejemplo de aplicación web básica con Flask, captionpos=b, frame=single]
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def hello():
+    return "Hello World!"
+
+if __name__ == "__main__":
+    app.run(debug=True)
+\end{lstlisting}
+\end{minipage}
+
+\subsection{Base de datos}
+
+ Una vez definida la solución a utilizar para recolectar las detecciones es necesario definir como almacenaremos estas detecciones y para ello utilizaremos una base de datos. Cabe destacar que tal y como se indicó en los objetivos no es propósito de este proyecto el posterior procesamiento de estos datos, por tanto en la elección de esta solución no se tendrá tanto en cuenta el rendimiento en la lectura y agregación de los datos como el rendimiento de escritura y la simplicidad en la implementación e integración de la solución, también será valorable los conocimientos previos en la tecnología de cara a reducir el tiempo de desarrollo en este objetivo secundario.\\
+
+En este análisis se tuvieron en cuenta tanto bases de datos tradicionales SQL como NoSQL. Estas últimas cuentan con gran popularidad en el mercado IoT debido a su gran versatilidad ya que no requieren estructuras fijas como tablas si no que suelen utilizar sistemas de almacenamiento basados en estructuras de clave-valor o en forma de documentos, es decir, cada registro puede contener una información con diferente forma de otro registro dentro del mismo conjunto, otra de sus ventajas es que son altamente escalables horizontalmente. Como principales desventajas no suelen permitir operaciones \textit{JOIN} ni garantizan las características ACID (atomicidad, consistencia, aislamiento y durabilidad). Algunos ejemplos de este tipo de tecnología son MongoDB, CouchDB o Cassandra.\\
+
+Los sistemas de base de datos NoSQL presentan grandes ventajas para sistemas IoT no homogeneizados dada su gran dinamicidad en la ingesta de los datos, pero esta característica no será necesaria en este proyecto ya que la información que se almacenará será estable y bien definida su estructura desde el inició del proyecto. Tampoco se observan grandes diferencias de rendimiento respecto a los sistemas tradicionales, siendo estos últimos incluso más eficientes en la inserción \cite{ASIMINIDIS2018} \cite{RAUTMARE2016} que como se ha mencionado anteriormente primará en los requisitos respecto al rendimiento en lectura.
+
+Estos motivos junto a la familiaridad con los sistemas tradicionales SQL, su gran ecosistema y madurez en el mercado han llevado a seleccionar como solución el sistema de gestión de base de datos relacional PostgreSQL.
+
+\subsection{Herramientas de despliegue}
+
+Para el despliegue del servidor web y de la base de datos se ha decidido utilizar contenedores, tanto en la etapa de desarrollo como en la puesta en producción. En general, las ventajas que ofrece un entorno de despliegue de aplicaciones sobre contenedores son las siguientes:\\
+
+\begin{itemize}
+  \item Ligereza: Respecto a soluciones tradicionales como máquinas virtuales son mucho más ligeras en tamaño y en consumo ya que no inician una copia completa del sistema operativo.
+  \item Escalado: Debido a su ligereza el arranque de los contenedores es muy rápido en comparación a los sistemas tradicionales, podemos desplegar nuevas replicas en unos segundo si la demanda sube y volverlos a destruir cuando ya no son necesarios.
+  \item Estandarización de los despliegues: Las aplicaciones que se ejecutan sobre un contenedor están aisladas del resto del sistema y por lo tanto los contenedores se pueden migrar fácilmente de una máquina a otra sin preocuparse por problemas de compatibilidad.
+  \item Facilidad para aplicar parches y actualizaciones: Los contenedores se basan en imágenes inmutables, por lo que para aplicar un parche simplemente se genera una imagen nueva y se cambia la configuración del servicio para usarla.
+  \item Independencia de la infraestructura subyacente: No importa si los hosts sobre los que se despliegue este tipo de plataforma son servidores físicos, máquinas virtuales en un CPD local, o servidores virtuales de algún proveedor como Amazon, Microsoft o Google, una vez estén configuradas, las aplicaciones desplegadas en ella van a funcionar sin apenas ningún cambio en cualquiera de esas situaciones.
+  \item Mayor consistencia entre los entornos de prueba: Toda la definición de la imagen sobre la que se ejecutará nuestra aplicación está descrita en un fichero por lo que no harbá prácticamente diferencias entre los entornos.
+\end{itemize}
+
+La tecnología seleccionada para la creación de los contenedores ha sido Docker, es sin lugar a dudas la herramientas de contenedores más popular y utilizada, por lo que disponemos de mucha información y ayuda.\\
+
+Para orquestar el despliegue de estos contenedores también se utilizara la herramienta Docker Compose, esta herramienta nos permite definir mediante un fichero YAML como se desplegaran los contenedores, facilitando herramientas para la carga de variables de entorno, exponer puertos o definir dependencias entre los contenedores.\\
+
+Una vez seleccionada la solución para desplegar las aplicaciones queda definir sobre que se infraestructura se desplegará, para la fase de desarrollo se ha optado por desplegar en mi propio equipo utilizando solamente las herramientas mencionadas, sin embargo para un entorno de producción necesitamos un entorno con alta disponibilidad, escalabilidad y con facilidad de acceso externo. Para responder a estas necesidades se ha decidido utilizar una plataforma como servicio, denominado PaaS por sus siglas en ingles (\textit{Platform as a Service}), este concepto describe un tipo de servicio en la nube que nos proporciona una plataforma para desplegar aplicaciones sin la complejidad de construir y mantener nosotros la infraestructura, simplemente subiremos nuestro código y este se desplegará automáticamente. La plataforma elegida ha sido Heroku, es uno de los PaaS más utilizados en la actualidad nación en 2007 y en 2010 fue adquirido por Salesforce, ofrece soporte para una gran variedad de lenguajes: Node.js, Ruby, Python, Java, PHP, Go, Scala y Clojure; bajo el capó estas aplicaciones son desplegadas mediante contenedores denominados "dynos", además nos ofrece la posibilidad de instalar \textit{addons} para agregar funcionalidades a estos contenedores, por ejemplo, servicios de base de datos, monitorización y \textit{logging}.\\
+
+ Esta plataforma se distingue por su sencillez, nos permite desplegar una nueva aplicación en cuestión de minutos, por ejemplo, para una aplicación Python solo necesitamos crear un nuevo proyecto a través de su interfaz web o de su cliente de CLI, una vez creado nos proporcionará un enlace a un repositorio git dónde podremos subir el código y se desplegará automáticamente, lo único que necesitaremos hacer antes de subirlo es que disponer del clásico archivo \textit{requirements.txt} con las dependencias de nuestra aplicación en el raíz del repositorio y un simple fichero llamado \textit{Procfile} dónde especificaremos como debe arrancarse nuestra aplicación.\\
+
+ \begin{minipage}{\linewidth}
+ \begin{lstlisting}[caption=Ejemplo de fichero Procfile para desplegar una apliación Flask en Heroku , captionpos=b, frame=single]
+ web: gunicorn app:app
+ \end{lstlisting}
+ \end{minipage}
+
 \end{document}
