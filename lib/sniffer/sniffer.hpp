@@ -1,10 +1,10 @@
 /**
  * \file sniffer.hpp
  *
- * \brief Sniff IEEE 802.11 management packages for ESP8266.
+ * \brief Sniff IEEE 802.11 management packages for ESP32.
  * 
  * Capture managements packets in all channels (1-13), and get MAC address of 
- * the transmitting station. For ESP8266 chip using Espressif SDK NonOS
+ * the transmitting station. For ESP32 chip using Espressif esp-idf framework.
  *
  */
 
@@ -14,70 +14,16 @@
 #include <stdint.h>
 #include "Arduino.h"
 #include <map>
+#include <esp_wifi.h>
 
-// Expose Espressif SDK functionality
-extern "C" {
-    #include "user_interface.h"
-    #include "sntp.h"
-}
 
 namespace Sniffer {
 
 extern std::map<String,uint32_t> sta_detected;///<Store stations detected transmitting probe request.
 
 /**
-* Structures for promiscuous mode callback. Taken literally from ESP8226 documentation.
-* For more information see ESP8266 Technical reference:
-* http://espressif.com/sites/default/files/documentation/esp8266-technical_reference_en.pdf
-* If the previous link is broken, try this http://espressif.com/en/support/download/documents
+* Structures for promiscuous mode callback.
 */
-
-/**
-* \struct RxControl
-*
-* \brief Struct for rx control data provided by SDK API Espressif ESP8266
-*
-*/
-struct RxControl {
-    signed rssi:8; // signal intensity of packet
-    unsigned rate:4;
-    unsigned is_group:1;
-    unsigned:1;
-    unsigned sig_mode:2; // 0:is not 11n packet; non-0:is 11n packet;
-    unsigned legacy_length:12; // if not 11n packet, shows length of packet.
-    unsigned damatch0:1;
-    unsigned damatch1:1;
-    unsigned bssidmatch0:1;
-    unsigned bssidmatch1:1;
-    unsigned MCS:7; // if is 11n packet, shows the modulation and code used (range from 0 to 76)
-    unsigned CWB:1; // if is 11n packet, shows if is HT40 packet or not
-    unsigned HT_length:16;// if is 11n packet, shows length of packet.
-    unsigned Smoothing:1;
-    unsigned Not_Sounding:1;
-    unsigned:1;
-    unsigned Aggregation:1;
-    unsigned STBC:2;
-    unsigned FEC_CODING:1; // if is 11n packet, shows if is LDPC packet or not.
-    unsigned SGI:1;
-    unsigned rxend_state:8;
-    unsigned ampdu_cnt:8;
-    unsigned channel:4; // which channel this packet in.
-    unsigned:12;
-};
-
-/**
-* \struct sniffer_buf
-*
-* \brief Struct for IEEE 802.11 packets according to Espressif SDK.
-*
-*/
-struct sniffer_buf {
-    struct RxControl rx_ctrl;
-    uint8_t buf[112];
-    uint16_t cnt; // number count of packet
-    uint16_t len; // length of packet
-};
-
 
 /************************************************************************************************
 *   Structures for IEEE 802.11 MAC frame and header.                                            *
@@ -129,6 +75,7 @@ struct iee80211_header {
     uint16_t seq_ctrl;
     // There are other fields defined in the standard, not necessary for the 
     // purpose of this project. For more information see IEEE 802.11 Standard
+    unsigned char payload[];
 };
 
 /**
@@ -137,11 +84,11 @@ struct iee80211_header {
  * Check if packet received in buff is a probe request package , if it is
  * extracts the MAC address of the transmitting station.
  *
- * \param[in]     buffer the data received.
- * \param[out]    length data length
+ * \param[in]    Data received. Type of data in buffer (wifi_promiscuous_pkt_t or wifi_pkt_rx_ctrl_t) indicated by 'type' parameter.
+ * \param[in]    promiscuous packet type.
  *
  */
-void ICACHE_FLASH_ATTR sniffer_callback(uint8_t *buffer, uint16_t length);
+void ICACHE_FLASH_ATTR sniffer_callback(void *buff, wifi_promiscuous_pkt_type_t type);
 
 /**
  * \brief Change WiFi channel to the next.

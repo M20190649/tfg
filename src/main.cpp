@@ -5,62 +5,60 @@
  *
  */
 
-// Expose Espressif SDK functionality
-extern "C" {
-    #include "user_interface.h"
-    #include "sntp.h"
-}
-
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <ESP8266HTTPClient.h>
-#include <ESP8266WiFi.h>
+#include <BLEAdvertisedDevice.h>
+#include <BLEDevice.h>
+#include <BLEScan.h>
+#include <BLEUtils.h>
+#include <esp_wifi.h>
+#include <HTTPClient.h>
+#include <MD5Builder.h>
 #include <sniffer.hpp>
-#include <Time.h>
+#include <WiFi.h>
 
 #define DEBUG 0
-
-#define CHANNEL_HOP_INTERVAL_MS   1000 // Milliseconds to change WiFi channel
-#define SEND_DETECTIONS_INTERVAL_MS 20000 // Send detections to server every X milliseconds
-#define SNTP_WAIT_MS 100 // Time to wait to get a response from sntp.
 
 #define WIFI_SSID ""
 #define WIFI_PASSWD ""
 #define SERVER_URL ""
 
-char station_id[32]; // ID of the esp8266, generated in setup with hashed mac (md5).
+String station_id; // ID of the esp32, generated in setup with hashed mac (md5).
+BLEScan* p_ble_scan;
+std::map<String,uint32_t> ble_detected;
+bool ble_scan_active = false;
 
-// Software timers
-static os_timer_t channel_hop_timer; // Software timer for channel surfing
-static os_timer_t send_detections_timer; // Software timer for send detections to server
-static os_timer_t sntp_timer; // Software timer for sntp sync
+class ble_advertised_device_cb: public BLEAdvertisedDeviceCallbacks {
+    void onResult(BLEAdvertisedDevice advertisedDevice) {
+        time_t now;
+        time(&now);
+        String bd_addr = advertisedDevice.getAddress().toString().c_str();
+        ble_detected[bd_addr] = now;
 
-bool channel_hop_flag = false;
-bool send_detections_flag = false;
-bool sntp_synced = false;
-
-void channel_hop_isr () {
-    channel_hop_flag = true;
-}
-
-void send_detections_isr () {
-    send_detections_flag = true;
-}
-
-void ICACHE_FLASH_ATTR check_sntp_stamp_isr () {
-    uint32 current_stamp;
-    current_stamp = sntp_get_current_timestamp();
-    if (current_stamp < 60000 ) {
-        os_timer_arm(&sntp_timer, SNTP_WAIT_MS, false);
-    } else {
-        os_timer_disarm(&sntp_timer);
-        sntp_synced = true;
+        #if DEBUG == 1
+        Serial.println();
+        struct tm timeinfo;
+        localtime_r(&now, &timeinfo);
+        Serial.printf("Bluetooth detection: | MAC: %s ", advertisedDevice.getAddress().toString().c_str());
+        Serial.print(" - Time: ");
+        Serial.print(&timeinfo);
+        Serial.println();
+        #endif
     }
+};
+
+String md5(String str) {
+    MD5Builder _md5;
+
+    _md5.begin();
+    _md5.add(String(str));
+    _md5.calculate();
+
+    return _md5.toString();
 }
 
 void connect_wifi() {
     WiFi.begin(WIFI_SSID, WIFI_PASSWD);
-    delay(500);
     Serial.print("Connecting");
     while (WiFi.status() != WL_CONNECTED)
     {
@@ -72,10 +70,27 @@ void connect_wifi() {
     Serial.println(WiFi.localIP());
 }
 
+void promiscuous_mode(bool enable=true) {
+    if (enable) {
+        WiFi.disconnect(true);
+        wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
+        esp_wifi_init(&wifi_cfg);
+        esp_wifi_set_mode(WIFI_MODE_NULL);
+        esp_wifi_start();
+        const wifi_promiscuous_filter_t filter={.filter_mask=WIFI_PROMIS_FILTER_MASK_MGMT};
+        esp_wifi_set_promiscuous_filter(&filter);
+        esp_wifi_set_promiscuous_rx_cb(&Sniffer::sniffer_callback);
+        esp_wifi_set_promiscuous(true);
+        esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
+    } else {
+        esp_wifi_set_promiscuous(false);
+        esp_wifi_stop();
+    }
+
+}
+
 void send_detections() {
-    yield();
-    wifi_promiscuous_enable(0);
-    delay(50);
+    Serial.println("Sending detections. ");
     connect_wifi();
 
     // Memory pool for JSON object tree (bytes).
@@ -83,20 +98,21 @@ void send_detections() {
 
     json_doc["node"] = station_id;
     JsonObject detections = json_doc.createNestedObject("detections");
-
-    for (std::map<String,uint32_t>::iterator it=Sniffer::sta_detected.begin(); it!=Sniffer::sta_detected.end(); ++it){
-        detections[it->first] = it->second;
-        yield();
+    for (std::map<String,uint32_t>::iterator it=Sniffer::sta_detected.begin(); it!=Sniffer::sta_detected.end(); ++it) {
+        detections[md5(it->first)] = it->second;
+    }
+    for (std::map<String,uint32_t>::iterator it=ble_detected.begin(); it!=ble_detected.end(); ++it) {
+        detections[md5(it->first)] = it->second;
     }
 
     // Clear detecions
     Sniffer::sta_detected.clear();
+    ble_detected.clear();
 
     #if DEBUG == 1
     serializeJsonPretty(json_doc, Serial);
+    Serial.println();
     #endif
-    
-    yield();
 
     String databuf;
     serializeJson(json_doc, databuf);
@@ -106,88 +122,70 @@ void send_detections() {
     http.addHeader("Content-Type", "application/json");
     http.POST(databuf);
     http.end();
-
-
-    yield();
-    wifi_station_disconnect(); // API requirement before enable promiscuous mode.
-    wifi_set_opmode(STATION_MODE); // Promiscuous mode only works with station mode
-    wifi_promiscuous_enable(1);
 }
 
-void ICACHE_FLASH_ATTR setup()
-{
+void ICACHE_FLASH_ATTR setup() {
     // Initialize serial communication
     Serial.begin(115200);
     delay(5);
     Serial.println();
     Serial.println("Initializing system.");
     Serial.println("Generating station ID.");
+    
     // Generate station ID as MAC hashed md5
-    MD5Builder _md5;
-    _md5.begin();
-    _md5.add(WiFi.macAddress());
-    _md5.calculate();
-    _md5.getChars(station_id);
-    Serial.printf("Station_id: %s \n", station_id);
-
-    yield();
+    station_id = md5(WiFi.macAddress());
+    Serial.printf("Station_id: %s \n", station_id.c_str());
 
     // WiFi connection
     connect_wifi();
 
     //Get time through SNTP
     Serial.print("Getting timestamp from server.");
-    sntp_setservername(0, (char*)"hora.roa.es");
-    sntp_setservername(1, (char*)"pool.ntp.org");
-    sntp_setservername(2, (char*)"time.nist.gov");
-    sntp_set_timezone(0);
-    sntp_init();
 
-    // Set callback function to check SNTP timestamp
-    os_timer_setfn(&sntp_timer, (os_timer_func_t *) check_sntp_stamp_isr, NULL);
-    os_timer_arm(&sntp_timer, SNTP_WAIT_MS, false);
+    const char* ntp_server1 = "hora.roa.es";
+    const char* ntp_server2 = "pool.ntp.org";
+    const char* ntp_server3 = "time.nist.gov";
+    const long  gmt_offset_sec = 3600;
+    const int   daylight_offset_sec = 3600;
+    
+    configTime(gmt_offset_sec, daylight_offset_sec, ntp_server1, ntp_server2, ntp_server3); 
 
-    while ( sntp_synced == false ) {
+    struct tm timeinfo;
+    while ( !getLocalTime(&timeinfo) ) {
         delay(500);
         Serial.print(".");
     }
-
-    uint32_t current_stamp = sntp_get_current_timestamp();
-    setTime(current_stamp);
-    Serial.printf("\nSNTP OK\nTimestamp:       %d,     %s      \n",current_stamp, sntp_get_real_time(current_stamp));
+    Serial.println(&timeinfo);
 
     Serial.println("Starting sniffer mode.");
-    // Promiscuous mode
-
-    wifi_station_disconnect(); // API requirement before enable promiscuous mode.
-    wifi_set_opmode(STATION_MODE); // Promiscuous mode only works with station mode
-    wifi_set_channel(1);
-    wifi_promiscuous_enable(0);
-    wifi_set_promiscuous_rx_cb(Sniffer::sniffer_callback);
-    wifi_promiscuous_enable(1);
-
-    // Set callback function for channel surfing timer and enable timer.
-    os_timer_setfn(&channel_hop_timer, (os_timer_func_t *) channel_hop_isr, NULL);
-    os_timer_arm(&channel_hop_timer, CHANNEL_HOP_INTERVAL_MS, true);
-
-    // Set callback function for send detections to server timer and enable timer.
-    os_timer_setfn(&send_detections_timer, (os_timer_func_t *) send_detections_isr, NULL);
-    os_timer_arm(&send_detections_timer, SEND_DETECTIONS_INTERVAL_MS, true);
-
-    Serial.println("System initialized.");
-
+    
+    BLEDevice::init("");
+    p_ble_scan = BLEDevice::getScan();
+    p_ble_scan->setAdvertisedDeviceCallbacks(new ble_advertised_device_cb());
+    p_ble_scan->setActiveScan(true);
+    p_ble_scan->setInterval(100);
+    p_ble_scan->setWindow(99);
+    
+    promiscuous_mode(true);
 }
 
-void loop()
-{
-    if (channel_hop_flag) {
-        Sniffer::channel_hop();
-        channel_hop_flag = false;
-    }
+void scan_complete_cb(BLEScanResults scanResults) {
+	ble_scan_active = false;
+}
 
-    if (send_detections_flag) {
+void loop() {
+    uint32_t detecions_count = Sniffer::sta_detected.size() + ble_detected.size();
+    if ( detecions_count >= 100) {
+        p_ble_scan->stop();
+        promiscuous_mode(false);
         send_detections();
-        send_detections_flag = false;
+        p_ble_scan->start(5, scan_complete_cb, false);
+        promiscuous_mode(true);
     }
+    if (!ble_scan_active) {
+        p_ble_scan->start(5, scan_complete_cb, false);
+        ble_scan_active = true;
+    }
+    Sniffer::channel_hop();
+    delay(200);
 }
- 
