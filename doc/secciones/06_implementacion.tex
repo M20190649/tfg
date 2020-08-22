@@ -186,6 +186,8 @@ void send_detections() {
 
 Como se estableció en la introducción de este trabajo uno de los objetivos secundarios consiste en almacenar y poder visualizar todas las detecciones realizadas por los sensores en un servidor central, con este propósito se ha desarrollado una API REST basada en HTTP, usando JSON como formato de intercambio de datos. Además se ha desarrollado una interfaz web para poder visualizar de una forma más cómoda las detecciones.\\
 
+A lo largo de esta sección se describirán los principales componentes de este sistema, como se han implementado y las herramientas utilizadas.\\
+
 Para el desarrollo de la API y la interfaz web se ha utilizado el \textit{framework} de desarrollo web Flask, para desplegar esta herramienta se han empleado contenedores Docker que serán desplegados utilizando el proveedor PaaS Heroku, en la Figura \ref{fig:estructura_servidor_central} se puede ver la estructura del despliegue.\\
 
 \begin{figure}[H]
@@ -193,6 +195,67 @@ Para el desarrollo de la API y la interfaz web se ha utilizado el \textit{framew
 \includegraphics[scale=0.5]{implementacion/estructura_servidor_central}
 \caption{Estructura servidor central }
 \label{fig:estructura_servidor_central}
+\end{figure}
+
+
+
+\noindent{\textbf{Flask}}\\
+
+\noindent{\textbf{Base de datos}}\\
+
+El diseño de la base de datos para este proyecto ha resultado bastante sencillo siendo solo necesarias dos tablas, una para almacenar las detecciones y otra para los sensores a las que irán asociadas estas detecciones, en la Figura \ref{fig:table_diagram} se puede ver el contenido de estas tablas y su relación.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{implementacion/table_diagram}
+\caption{Diagrama de Entidad-Relación del servidor central.}
+\label{fig:table_diagram}
+\end{figure}
+
+Para facilitar la conexión con la base de datos y el tratamiento de los datos contenidos en ella se ha utilizado una librería ORM, de sus siglas en inglés \textit{Object Relational Mapper}, este tipo de librearías nos permiten mapear las estructuras de una base de datos relacional con objetos de un lenguaje de programación orientado a objetos, de forma que podemos acceder a tablas y filas de una base de datos como clases y objetos, además encapsula las sentencias SQL en forma de métodos, de esta forma no necesitaremos usar SQL para manipular los datos si no que interactuaremos directamente con objetos y métodos del mismo lenguaje que estamos usando, en este caso Python.\\
+
+SQLAlchemy \cite{sqlalchemy} ha sido la herramienta ORM seleccionada para este fin, para integrarla con la aplicación se ha utilizado las extensión Flask-SQLAlchemy \cite{flask_sqlalchemy} que simplifica el uso de SQLAlchemy con Flask proporcionando valores predeterminados útiles y funciones adicionales que facilitan la realización de tareas comunes.\\
+
+Utilizando esta extensión se han definido los modelos de datos utilizando clases dentro del código de la aplicación tal y como se muestra a continuación.\\
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python, caption=Definición de modelos utilizando SQLAlchemy, captionpos=b, frame=single]
+class Sensor(db.Model):
+    id = db.Column(db.String(32), primary_key=True, index=True)
+    description = db.Column(db.String(200))
+    detections = db.relationship('Detection', backref='sensor', lazy=True)
+
+    def __repr__(self):
+        return 'Sensor {}, {}'.format(self.id, self.description)
+
+
+class Detection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    md5_mac = db.Column(db.String(32), index=True)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    sensor_id = db.Column(db.String(32), db.ForeignKey('sensor.id'), nullable=False)
+
+    def __repr__(self):
+        return 'Detection {}, MD5_MAC: {}, timestamps: {}, sensor: {}'.format(self.id, self.md5_mac, self.timestamp, self.sensor_id)
+\end{lstlisting}
+\end{minipage}
+
+Para gestionar las migraciones de la base de datos se ha utilizado la extensión Flask-Migrate \cite{flask_migrate}, esta extensión genera scripts de migración con las instrucciones necesarias para reflejar los cambios de los modelos de datos de nuestro código en la estructura de la base de datos, además nos permite realizar un control de versiones de los cambios realizados en la estructura de la base de datos pudiendo volver a la versión anterior con un simple comando en caso de error.\\
+
+
+\noindent{\textbf{Frontal Web}}\\
+
+Para el diseño del frontal se  ha utilizado el \textit{framework} Bootstrap \cite{bootstrap_frontend_framework}, este \textit{framework} nos permite un desarrollo rápido y sencillo de interfaces web combinando CSS y Javascript, para ello nos facilita plantillas de diseño y elementos prediseñados como botones, formularios o menús de navegación. Además estos elementos están pensados para el diseño web adaptativo (\textit{responsive}) por lo que se ajustan de forma nativa a distintas resoluciones facilitando su visualizado en diferentes tipos de dispositivos. Para facilitar su integración con el motor de plantillas Jinja 2 se ha utilizado la extensión \textit{Flask-Bootstrap} \cite{flask_bootstrap} que proporciona macros para evitar repetir código innecesariamente a la vez que nos permite personalizarlo.\\
+
+También se ha utilizado \textit{Flask-Paginate}, esta extensión nos facilita herramientas para realizar la paginación de las detecciones mostradas en la interfaz web, necesario dado el gran volumen de detecciones a mostrar, para ello esta extensión nos proporciona los mecanismos para controlar la cantidad de elementos que se consultarán a la base de datos en cada vista, además de funciones para la generación de los elementos HTML necesarios para facilitar la navegación al usuario. \\
+
+El resultado del uso de estas herramientas es una interfaz web limpia y sencilla que nos permite visualizar las detecciones realizadas cómodamente, en la Figura \ref{fig:interfaz_web_servidor_central} se puede observar una muestra de esta interfaz.\\
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{implementacion/interfaz_web_servidor_central}
+\caption{Interfaz web servidor central}
+\label{fig:interfaz_web_servidor_central}
 \end{figure}
 
 \noindent{\textbf{Docker}}\\
@@ -260,7 +323,7 @@ services:
 
 Esta definición nos permite utilizar Docker Compose para desplegar todo el entorno con el simple comando \textit{docker-compose up}.\\
 
-Docker Compose también nos facilitá la posibilidad de personalizar una aplicación para  diferentes entornos sin tener que reescribir la definición para cada entorno, para ello nos permite utilizar varios ficheros \textit{compose} que se combinarán, en el fichero base \textit{docker-compose.yml} se establece la definición común a todos los entornos y en un segundo fichero se definen las directivas específicas del entorno que ampliarán o sobreescribirán las definidas en el fichero base, por ejemplo, en el entorno de desarrollo se define un fichero de variables de entorno diferente y se añade un volumen al contenedor que estará conectado a la carpeta local del proyecto de forma que podamos realizar modificaciones en el código sin necesidad de recrear la imagen.
+Docker Compose también nos facilitá la posibilidad de personalizar una aplicación para  diferentes entornos sin tener que reescribir la definición para cada entorno, para ello nos permite utilizar varios ficheros \textit{compose} que se combinarán, en el fichero base \textit{docker-compose.yml} se establece la definición común a todos los entornos y en un segundo fichero se definen las directivas específicas del entorno que ampliarán o sobreescribirán las definidas en el fichero base, por ejemplo, en el entorno de desarrollo se define un fichero de variables de entorno diferente y se añade un volumen al contenedor que estará conectado a la carpeta local del proyecto de forma que podamos realizar modificaciones en el código sin necesidad de recrear la imagen.\\
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption=Fichero docker-compose.yml para el entorno de desarrollo, captionpos=b, frame=single]
