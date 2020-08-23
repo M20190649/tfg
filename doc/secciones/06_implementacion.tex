@@ -1,9 +1,11 @@
 \documentclass[../proyecto.tex]{subfiles}
 
 \begin{document}
-\chapter{Implementación}
+\chapter{Implementación}\label{chap:implementacion}
 
-\section{Sensor}
+En este capítulo se describirá en profundidad como se ha realizado la implantación de la soluciones propuestas en el \autoref{chap:analisis_del_problema} tanto para el desarrollo del sensor como del servidor central. Divido en dos secciones principales, en la  \autoref{sect:impementacion_sensor} se describirá la implementación del sensor y en la \autoref{sect:impementacion_servidor_central} la del servidor central.\\
+
+ \section{Sensor}\label{sect:impementacion_sensor}
 
 Como se ha comentado en el análisis de tecnologías para la realización de este sensor se ha seleccionado el SoC ESP32, utilizando una placa de desarrollo ESP32 DevKitC de Espressif y para el desarrollo del código se ha elegido el \textit{framework} Arduino aunque para algunas funcionalidades de más bajo nivel se utilizarán librerías del \textit{framework} ESP-IDF.\\
 
@@ -141,7 +143,7 @@ void loop() {
 \end{lstlisting}
 \end{minipage}
 
-La fase de envío de detecciones consiste principalmente en dos fases, en primer lugar se serializan las detecciones en un documento json  y en la segunda fase se envían mediante HTTP al servidor central. Para el envío de las detecciones al servidor central se utilizan la librería HTTPClient incluida en el core de Arduino, esta libería permite realizar fácilmente peticiones GET, POST y PUT a servidores HTTP. También se ha usado la librería ArduinoJson de Benoît Blanchon que permite serializar fácilmente las detecciones en un objeto JSON que se utilizará para el envío al servidor central mediante una petición POST.
+La fase de envío de detecciones consiste principalmente en dos fases, en primer lugar se serializan las detecciones en un documento JSON  y en la segunda fase se envían mediante HTTP al servidor central. Para el envío de las detecciones al servidor central se utilizan la librería HTTPClient incluida en el core de Arduino, esta libería permite realizar fácilmente peticiones GET, POST y PUT a servidores HTTP. También se ha usado la librería ArduinoJson de Benoît Blanchon que permite serializar fácilmente las detecciones en un objeto JSON que se utilizará para el envío al servidor central mediante una petición POST.
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[language=C++, caption=Envío de detecciones al servidor central , captionpos=b, frame=single]
@@ -182,7 +184,7 @@ void send_detections() {
 \end{lstlisting}
 \end{minipage}
 
-\section{Servidor Central}
+\section{Servidor Central}\label{sect:impementacion_servidor_central}
 
 Como se estableció en la introducción de este trabajo uno de los objetivos secundarios consiste en almacenar y poder visualizar todas las detecciones realizadas por los sensores en un servidor central, con este propósito se ha desarrollado una API REST basada en HTTP, usando JSON como formato de intercambio de datos. Además se ha desarrollado una interfaz web para poder visualizar de una forma más cómoda las detecciones.\\
 
@@ -197,11 +199,7 @@ Para el desarrollo de la API y la interfaz web se ha utilizado el \textit{framew
 \label{fig:estructura_servidor_central}
 \end{figure}
 
-
-
-\noindent{\textbf{Flask}}\\
-
-\noindent{\textbf{Base de datos}}\\
+\subsection{Base de datos}
 
 El diseño de la base de datos para este proyecto ha resultado bastante sencillo siendo solo necesarias dos tablas, una para almacenar las detecciones y otra para los sensores a las que irán asociadas estas detecciones, en la Figura \ref{fig:table_diagram} se puede ver el contenido de estas tablas y su relación.
 
@@ -219,7 +217,7 @@ SQLAlchemy \cite{sqlalchemy} ha sido la herramienta ORM seleccionada para este f
 Utilizando esta extensión se han definido los modelos de datos utilizando clases dentro del código de la aplicación tal y como se muestra a continuación.\\
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[language=Python, caption=Definición de modelos utilizando SQLAlchemy, captionpos=b, frame=single]
+\begin{lstlisting}[language=Python, caption=Definición de modelos utilizando SQLAlchemy, label={lst:sqlalchemy_models}, captionpos=b, frame=single]
 class Sensor(db.Model):
     id = db.Column(db.String(32), primary_key=True, index=True)
     description = db.Column(db.String(200))
@@ -242,23 +240,161 @@ class Detection(db.Model):
 
 Para gestionar las migraciones de la base de datos se ha utilizado la extensión Flask-Migrate \cite{flask_migrate}, esta extensión genera scripts de migración con las instrucciones necesarias para reflejar los cambios de los modelos de datos de nuestro código en la estructura de la base de datos, además nos permite realizar un control de versiones de los cambios realizados en la estructura de la base de datos pudiendo volver a la versión anterior con un simple comando en caso de error.\\
 
+\subsection{API REST}
+Con el fin de permitir a los usuarios consultar las detecciones y sensores del sistema, además de permitir al sensor realizar inserciones de nuevas detecciones se ha desarrollado una API REST con Flask que expone tres \textit{endpoints}: \textit{sensors}, \textit{detections} y \textit{detections-collection}, para cada uno se han implementado los métodos más importantes en este tipo de APIs: consulta (GET), inserción (POST), modificación (PUT) y eliminación (DELETE); a excepción del \textit{endpoint detections-collection} que se detallará más adelante.\\
 
-\noindent{\textbf{Frontal Web}}\\
+El acceso a la API se realiza a través del path \textit{/api/v1.0}, la última parte representa la versión de la API de cara a evitar problemas de retrocompatibilidad con los clientes debido a evolutivos que cambien, por ejemplo, los parámetros de entrada, en el caso de este proyecto solo está expuesta la versión mencionada.\\
+
+A continuación se expone el listado de \textit{endpoints} expuestos junto a los métodos que implementan:\\
+
+\noindent{\textbf{detections}
+
+\begin{itemize}
+  \item \textit{GET /detections}:  Devuelve todas las detecciones realizadas.
+  \item \textit{GET /detections/<detection\_id>}: Devuelve los datos asociados a una detección en concreto.
+  \item \textit{POST /detections}: Crea una nueva detección.
+  \item \textit{PUT /detections/<detection\_id>}: Modifica los datos asociados a la detección indicada.
+  \item \textit{DELETE /detections/<detection\_id>}: Elimina la detección indicada.
+\end{itemize}
+
+\noindent{\textbf{detections-collection}
+\begin{itemize}
+\item \textit{POST /detections-collection}: Creación masiva de detecciones.
+\end{itemize}
+
+\noindent{\textbf{sensors}
+
+\begin{itemize}
+  \item \textit{GET /sensors}: Devuelve todos los sensores existentes.
+  \item \textit{GET /sensors/<sensor\_id>}: Devuelve los datos asociados al sensor indicado.
+  \item \textit{POST /sensors}: Crea un nuevo sensor.
+  \item \textit{PUT /sensors/<sensor\_id>}: Modifica los datos asociados al sensor indicado.
+  \item \textit{DELETE /sensors/<sensor\_id>}: Elimina el sensor indicado.
+\end{itemize}
+
+La información devuelta por estos \textit{endpoints} utiliza el formato de documentos JSON, igualmente el formato utilizado por los clientes para el envío de las peticiones de inserción y modificación (POST y PUT) es JSON. En el Código \ref{lst:json_detection} se puede ver un ejemplo del documento JSON para las detecciones y en el Código \ref{lst:json_sensor} para los sensores.\\
+
+\medskip
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=Ejemplo de JSON para detecciones, label={lst:json_detection}, captionpos=b, frame=single]
+{
+    "md5_mac": "874b165dccb840797ab7decdce8a3a40",
+    "timestamp": "1598198020",
+    "sensor_id": "f2946ea4a8712d3fb4e2253238da2632"
+}
+\end{lstlisting}
+\end{minipage}
+
+\medskip
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=Ejemplo de JSON para sensores, label={lst:json_sensor}, captionpos=b, frame=single]
+{
+    "id": "363daf8619557863c7b4f9767389cb6c",
+    "description": "ESP32 DevKitC"
+}
+\end{lstlisting}
+\end{minipage}
+
+\medskip
+
+Un caso especial es el del \textit{endpoint} para inserción masiva de detecciones \textit{/detections-collection}, este \textit{endpoint} está compuesto por un solo método \textit{POST} que nos permite realizar una creación masiva de detecciones con una sola llamada HTTP, este diseño atípico surge de las restricciones de tiempo de procesamiento del sensor para el envío de las detecciones ya que realizar una conexión HTTP por cada detección supondría una gran sobrecarga para el sensor, además para este método se ha diseño un formato de documento JSON simplificado prescindiendo de las claves de los valores de detección para reducir el uso de memoria en el sensor, en el Código \ref{lst:json_detecciones_masivas} se puede ver un ejemplo de documento JSON utilizado para realizar una inserción de múltiples detecciones.\\
+
+\medskip
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption=Ejemplo de JSON para inserción masiva de detecciones, label={lst:json_detecciones_masivas},captionpos=b, frame=single]
+{
+  "node": "6e1142a5d86b1eca0ed13b408487fe05",
+  "detections": {
+    "70fbb859bf3606b8b0b54e30c2f1facd": 1563737210,
+    "7598e7b767976cdd583135125da0836f": 1563737209,
+    "9331c407b188128654e3c3c218bb10d8": 1563737215
+  }
+}
+\end{lstlisting}
+\end{minipage}
+
+\medskip
+
+Para facilitar el tratamiento de los documentos JSON se ha utilizado la extensión Flask-Marshmallow \cite{flask_marshmallow}, esta extensión se integra con la extensión Flask-SQLAlchemy y nos permite crear esquemas (Código \ref{lst:marshmallow_schemas}) basados en nuestros modelos de datos  (Código \ref{lst:sqlalchemy_models}) facilitando la deserialización de los documentos JSON recibidos en objetos y viceversa, además nos aporta una capa de validación de los datos basándose en los tipos definidos en las clases de nuestro modelos.\\
+
+\medskip
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python, caption=Esquemas de datos de Flask-Marshmallow, label={lst:marshmallow_schemas},captionpos=b, frame=single]
+class DetectionSchema(ma.ModelSchema):
+    class Meta:
+        model = Detection
+        # Fields to expose
+        fields = ("id", "md5_mac", "timestamp", "sensor_id")
+
+    @pre_load
+    def convert_timestamp(self, in_data, **kwargs):
+        in_data['timestamp'] = str(datetime.fromtimestamp(float(in_data['timestamp'])))
+        return in_data
+
+
+class SensorSchema(ma.ModelSchema):
+    class Meta:
+        model = Sensor
+        # Fields to expose
+        fields = ("id", "description")
+
+detection_schema = DetectionSchema(dump_only=["id"])
+detections_schema = DetectionSchema(many=True)
+sensor_schema = SensorSchema(dump_only=["detections"])
+sensors_schema = SensorSchema(many=True)
+\end{lstlisting}
+\end{minipage}
+
+\medskip
+
+Esta extensión nos permite reducir considerablemente el código necesario para tratar las peticiones a la API, en el Código \ref{lst:marshmallow_example} se muestra como ejemplo el tratamiento de la llamada a la API para crear un nuevo sensor, se puede observar como con una sola línea se realiza la validación y deserialización del documento JSON de entrada a un objeto de nuestra base de datos.\\
+
+\medskip
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python, caption=Ejemplo de funcionamiento de Flask-Marshmallow, label={lst:marshmallow_example},captionpos=b, frame=single]
+@api.route('/sensors/', methods=['POST'])
+def new_sensor():
+    sensor = sensor_schema.load(request.json, session=db.session).data}
+    db.session.add(sensor)
+    db.session.commit()
+
+    return sensor_schema.jsonify(sensor), 201, \
+           {'Location': url_for('api.get_sensor', sensor_id=sensor.id)}
+\end{lstlisting}
+\end{minipage}
+
+\medskip
+
+\subsection{Frontal Web}
 
 Para el diseño del frontal se  ha utilizado el \textit{framework} Bootstrap \cite{bootstrap_frontend_framework}, este \textit{framework} nos permite un desarrollo rápido y sencillo de interfaces web combinando CSS y Javascript, para ello nos facilita plantillas de diseño y elementos prediseñados como botones, formularios o menús de navegación. Además estos elementos están pensados para el diseño web adaptativo (\textit{responsive}) por lo que se ajustan de forma nativa a distintas resoluciones facilitando su visualizado en diferentes tipos de dispositivos. Para facilitar su integración con el motor de plantillas Jinja 2 se ha utilizado la extensión \textit{Flask-Bootstrap} \cite{flask_bootstrap} que proporciona macros para evitar repetir código innecesariamente a la vez que nos permite personalizarlo.\\
 
 También se ha utilizado \textit{Flask-Paginate}, esta extensión nos facilita herramientas para realizar la paginación de las detecciones mostradas en la interfaz web, necesario dado el gran volumen de detecciones a mostrar, para ello esta extensión nos proporciona los mecanismos para controlar la cantidad de elementos que se consultarán a la base de datos en cada vista, además de funciones para la generación de los elementos HTML necesarios para facilitar la navegación al usuario. \\
 
-El resultado del uso de estas herramientas es una interfaz web limpia y sencilla que nos permite visualizar las detecciones realizadas cómodamente, en la Figura \ref{fig:interfaz_web_servidor_central} se puede observar una muestra de esta interfaz.\\
+El resultado del uso de estas herramientas es una interfaz web limpia y sencilla que nos permite visualizar los sensores y las detecciones realizadas cómodamente tal y como se muestra en las Figuras \ref{fig:interfaz_web_detecciones} y \ref{fig:interfaz_web_sensores}.\\
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.4]{implementacion/interfaz_web_servidor_central}
-\caption{Interfaz web servidor central}
-\label{fig:interfaz_web_servidor_central}
+\includegraphics[scale=0.32]{implementacion/interfaz_web_detecciones}
+\caption{Interfaz web de visualización de detecciones}
+\label{fig:interfaz_web_detecciones}
 \end{figure}
 
-\noindent{\textbf{Docker}}\\
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.32]{implementacion/interfaz_web_sensores}
+\caption{Interfaz web de visualización de sensores}
+\label{fig:interfaz_web_sensores}
+\end{figure}
+
+\subsection{Herramientas de despliegue}
+
+\subsubsection{Docker}
 
 La primera pieza de este despliegue es la definición del contenedor que ejecutará la aplicación web, esta definición se realiza mediante el fichero \textit{Dockerfile} que contiene las instrucciones necesarias para crear la imagen que ejecutará el contenedor, como se puede observar en la primera línea del \textit{Dockerfile} para esta imagen se ha decidido partir de una imagen ya existente, \textit{python:alpine}, que nos proporciona una instalación base de Python sobre el sistema operativo ligero \textit{Alpine}, a partir de esta se instalarán las dependencias necesarias para ejecutar la aplicación y se copiará el código de la propia aplicación, entre otras acciones.\\
 
@@ -339,7 +475,7 @@ services:
 \end{lstlisting}
 \end{minipage}
 
-\noindent{\textbf{Heroku}}\\
+\subsubsection{Heroku}
 
 Para tener una mayor consistencia entre los entornos de desarrollo y producción se ha utilizado la funcionalidad de despliegue con contenedores de Heroku, esta funcionalidad nos permite construir la imagen del contenedor automáticamente al subir el código al repositorio de Heroku, tan solo es necesario definir la ubicación del Dockerfile para cada componente e indicar el proceso que debe ejecutar la aplicación al arrancar.\\
 
