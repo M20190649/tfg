@@ -3,13 +3,58 @@
 \begin{document}
 \chapter{Análisis del problema}\label{chap:analisis_del_problema}
 
-En este capítulo se realizará un análisis de las tecnologías y herramientas que han sido necesarias para cumplir los objetivos de este proyecto. Se diferenciaran dos secciones, en la primera se agruparán las tecnologías relacionadas con el sensor y en la segunda las relacionadas con el servidor central.\\
+En este capítulo se realizará un análisis del problema comenzando con una descripción de los requisitos que debe cumplir el sistema (Sección \autoref{sect:analisis_requisitos}) para más tarde analizar las posibles soluciones que nos permitan cumplir los requisitos analizados anteriormente (Sección \autoref{sect:analisis_requisitos}), culminando con la presentación de la solución elegida. Para ayudar a la organización de este capítulo cada una de estas secciones se ha divido a su vez en dos subsecciones, una para el análisis del sensor y otra para el análisis del servidor central.\\
+
+\section{Análisis de requisitos}\label{sect:analisis_requisitos}
+
+\subsection{Sensor}
+
+\noindent{\textbf{Requisitos funcionales}}
+\begin{itemize}
+  \item El sensor será capaz de detectar y registrar dispositivos BLE (Bluetooth Low Energy) cercanos.
+  \item El sensor será capaz de detectar y registrar dispositivos WiFi cercanos.
+  \item El sensor realizará el envío de las detecciones realizadas mediante el protocolo HTTP a través de una conexión WiFi.
+\end{itemize}
+
+\noindent{\textbf{Requisitos no funcionales}}
+\begin{itemize}
+  \item Bajo coste (< 15€).
+  \item Bajo consumo energético (< 250 mA).
+  \item Reducidas dimensiones (< 80 x 50 mm)
+\end{itemize}
+
+
+\subsection{Servidor Central}
+
+\noindent{\textbf{Requisitos funcionales}}
+\begin{itemize}
+  \item El sistema dispondrá de una API REST que permitirá crear, listar, modificar y eliminar tanto detecciones como sensores.
+  \item El sistema dispondrá de una interfaz web que permitirá visualizar las detecciones realizadas y la información de los sensores en forma de tablas.
+\end{itemize}
+
+\noindent{\textbf{Requisitos no funcionales}}
+\begin{itemize}
+  \item El frontal web debe poder visualizarse correctamente en los principales navegadores (Chrome, Firefox e Internet Explorer).
+  \item El frontal web debe adaptarse a diferentes resoluciones de pantalla.
+  \item El sistema permitirá su despliegue sobre contenedores.
+\end{itemize}
+
+\noindent{\textbf{Requisitos de información}}
+
+\begin{itemize}
+  \item Se almacenarán de forma persistente los datos de las detecciones enviadas al sistema (identificador, dirección MAC, fecha y hora e identificador del sensor que ha realizado la detección).
+  \item Se almacenarán de forma persistente los datos de los sensores conectados al sistema (identificador y descripción).
+\end{itemize}
+
+
+\section{Análisis de las soluciones}
+En esta sección se realizará un análisis de las tecnologías y herramientas que han sido necesarias para cumplir los objetivos de este proyecto. Se diferenciaran dos secciones, en la primera se agruparán las tecnologías relacionadas con el sensor y en la segunda las relacionadas con el servidor central.\\
 
 En cada subsección se presentará un resumen de los requisitos que se buscaban en cada tecnología, un repaso de las soluciones disponibles en el mercado y finalmente la solución seleccionada junto a la motivación para su elección.\\
 
 
-\section{Sensor}
-\subsection{SoC}
+\subsection{Sensor}
+\subsubsection{SoC}
 Los principales requisitos que debe cumplir la plataforma elegida son:
 
 \begin{itemize}
@@ -28,7 +73,7 @@ Además de estos requisitos se definen otros aspectos no indispensables pero des
   \item Gran comunidad de usuarios.
 \end{itemize}
 
-\subsubsection{Arduino}
+\paragraph{Arduino}\mbox{}\\
 Una de las primeras plataformas analizadas fue Arduino por su gran popularidad, estas placas empezaron su andadura en el 2005 y han cosechado una gran comunidad, pero hasta hace relativamente poco no ofrecían soluciones con conectividad WiFI y Bluetooth integrada si no que se basaban en el uso de módulos de expansión (\textit{shields}) para dotar a sus placas de conectividad inalámbrica lo cual encarecía el coste final, pero en 2018 decidieron cambiar con la placa ARDUINO MKR WIFI 1010 \cite{arduino_mkr_wifi_1010}, utiliza el SoC ESP32 fabricado por U-BLOX y dispone de conectividad WiFi y Bluetooth integrada en un empaquetado de solo 61.5x25 mm, más tarde en 2019 lanzaron el modelo ARDUINO NANO 33 IOT \cite{arduino_nano_33_iot} (Figura \ref{fig:arduino_nano_33_iot}) con prácticamente las mismas características y algunas mejoras como la inclusión de un acelerómetro pero sacrificando el conector de batería y la compatibilidad con los \textit{shields} en favor de un menor tamaño (48 × 18 mm) y menor coste. Esta última solución encajaba con la mayoría de los requisitos excepto con el coste, tiene un precio de aproximadamente 25€ que queda muy por encima del objetivo de coste, además su poca madurez en el mercado juega también en su contra.
 
 \begin{figure}[H]
@@ -38,7 +83,7 @@ Una de las primeras plataformas analizadas fue Arduino por su gran popularidad, 
 \label{fig:arduino_nano_33_iot}
 \end{figure}
 
-\subsubsection{Espressif Systems SoCs}
+\paragraph{Espressif Systems SoCs}\mbox{}\\
 Espressif es una compañía fundada en 2008 en China y con sede en Shanghai enfocada en el desarrollo de soluciones IoT que desarrolla \textit{chipsets} y módulos WiFi y/o Bluetooth/BLE de pequeñas dimensiones con un gran rendimiento, bajo consumo y coste enfocados principalmente a dotar de conectividad a los productos de otras compañías. Son los creadores de los populares SoCs ESP8266 y ESP32 que además tener una gran penetración en el mercado de IoT han tenido un gran éxito en la comunidad maker.\\
 
 \noindent{\textbf{ESP8266}}\\
@@ -180,7 +225,7 @@ Espressif también ofrece una gran variedad de DevKits para todo tipo de aplicac
 \label{fig:esp32_devkitc_32u}
 \end{figure}
 
-\subsubsection{Elección}
+\paragraph{Elección}\mbox{}\\
 
 Para el desarrollo de este proyecto se han utilizado módulos de desarrollo ya que facilitan un desarrollo rápido y cómodo al permitir programar y alimentar el módulo fácilmente a través de una conexión USB, aunque no es habitual utilizar este tipo de módulos en aplicaciones reales ya que encarecería el coste del despliegue al incluir componentes que no serían necesarios una vez desplegados, por ejemplo, no es necesario que los dispositivos ya desplegados incluyan un adaptador USB-Serial ya que normalmente solo serán programados inicialmente y en caso de ser necesario actualizarlos se podría usar un adaptador externo o realizar actualizaciones vía OTA. Una vez completado el desarrollo lo normal es utilizar módulos como el ESP-12 o un ESP32-WROOM con un menor tamaño y consumo, aunque si no es un despliegue de grandes magnitudes, por ejemplo, para realizar investigaciones usar un módulo de desarrollo podría seguir siendo una buena opción ya que ahorraría crear el diseñó de la placa de alimentación que necesitaría un módulo.\\
 
@@ -208,11 +253,11 @@ Como punto negativo este módulo no cuenta con Bluetooth integrado por lo que pa
 
 Por las razones expuestas inicialmente se decidió utilizar el SoC ESP8266 junto con el módulo Bluetooth HC-05 ya que cumplía con el requisito del bajo coste mejor que ninguna de las opciones incluso teniendo en cuenta el hecho de tener que adquirir el módulo Bluetooth por separado, pero durante el desarrollo del proyecto se apreció que en la valoración inicial no se había tenido en cuenta el coste que supondría el proceso de integración de estos módulo, aunque aparentemente una operación sencilla como es el soldado o cableado de estos dos módulos supondría un gran coste en mano de obra para realizar grandes despliegues. Este motivo llevo a replantear la opción del ESP32 ya que este SoC dispone de conectividad Bluetooth nativa, inicialmente fue descartado por tener un mayor coste pero al tener en cuenta los costes de integración de la primera elección quedan igualados en este punto, también simplificaría el diseño al poder configurar el Bluetooth sin necesidad de utilizar comandos AT, además dispone de un procesador más potente y de doble núcleo. Por todo lo expuesto finalmente se eligió el SoC ESP32 como solución para este proyecto, en concreto se utilizará le módulo de desarrollo ESP 32 DevKitC de Espressif.\\
 
-\subsection{Framework}
+\subsubsection{Framework}
 
 Actualmente existen multitud de \textit{frameworks} de desarrollo para el SoC ESP32, basados en una gran variedad de lenguajes como: C, C++, Python, JavaScript o Lua. A continuación se analizan algunos de los  \textit{frameworks} más usados.\\
 
-\subsubsection{Espressif IoT Development Framework (ESP-IDF)}
+\paragraph{Espressif IoT Development Framework (ESP-IDF)}\mbox{}\\
 ESP-IDF es el \textit{framework} de desarrollo oficial creado por Espressif Systems para el SoC ESP32. Está escrito principalmente en C  y está basado en el sistema operativo en tiempo real FreeRTOS. Es uno de los más usados y tiene una gran comunidad siendo fácil encontrar ayuda en sus foros oficiales, además cuenta con una extensa documentación oficial. La mayoría de \textit{frameworks} que trabajan sobre C o C++ están construidos sobre la API de ESP-IDF. Para trabajar con el solo es necesaria la toolchain propia, algunas herramientas de construcción (CMake y Ninja) y por supuesto el propio paquete ESP-IDF que contiene la API y algunos scripts para facilitar el uso de la toolchain. Con estas herramientas y un simple editor de texto ya podríamos empezar a crear aplicaciones para el ESP32 aunque es recomendable utilizar algún IDE como PlatformIO IDE.\\
 
  Las principales ventajas de este \textit{framework} es que al ser el oficial del fabricante es en el que primero obtendremos nuevas funcionalidades y parches de seguridad, otra de sus ventajas es que al tener un menor nivel de abstracción que permite un acceso a más bajo nivel que el resto, esto a su vez es su desventaja ya resulta en un código más extenso, a continuación podemos ver un ejemplo de un código para hacer parpadear un led.\\
@@ -241,7 +286,7 @@ void app_main(void)
 \end{lstlisting}
 \end{minipage}
 
-\subsubsection{Arduino}
+\paragraph{Arduino}\mbox{}\\
 Arduino es una plataforma de código abierto utilizada para la construcción de proyectos de electrónica, dentro de está plataforma encontramos el lenguaje de programación Arduino y el entorno de desarrollo IDE. Arduino es un lenguaje potente y sencillo que permite desarrollar proyectos en C/C++ sin requerir grandes conocimientos de electrónica. Gracias a su espíritu de código abierto ha crecido una gran comunidad a su alrededor que ha contribuido creando todo tipo de librerías y herramientas.\\
 
 Este lenguaje fue inicialmente diseñados para utilizar sobre las placas Arduino pero con su creciente popularidad se han realizado multitud de adaptaciones para usarlo en otros microcontroladores como es el caso del ESP32, esta adaptación esta basada en ESP-IDF y fue realizada por el propio fabricante del SoC Espressif Systems, permite un mayor nivel de abstracción y acceso a una gran cantidad de librerías sin perder acceso a funcionalidades a más bajo nivel usando funciones del ESP-IDF ya que las librerías están integradas en la compilación de la librería de Arduino.\\
@@ -263,7 +308,7 @@ void loop() {
 \end{lstlisting}
 \end{minipage}
 
-\subsubsection{MicroPython}
+\paragraph{MicroPython}\mbox{}\\
 MicroPython es una implementación del lenguaje de programación Python 3 que incluye una pequeño subconjunto de la biblioteca estándar de Python y está optimizada para ejecutarse en microcontroladores. Originalmente fue diseñado para ejecutarse sobre la placa PyBoard pero actualmente se ha adaptado a un amplio número de arquitecturas. No dispone de un IDE propio pero hay varias alternativas como uPyCraft, Thonny o  VSCode con la extensión PyMark.\\
 
 Su principal ventaja además de portar la simplicidad del lenguaje Python al mundo de los microcontroladores es que una vez cargado en la placa podemos ejecutar comandos en el ESP32 directamente a través del serial como si fuera una consola python normal y corriente, esto agiliza mucho el proceso de desarrollo ya que permite realizar pruebas sin tiempos de compilación ni de subida a la placa. Su mayor desventaja es que no permite acceder  a funciones a bajo nivel por ejemplo para las funcionalidades WiFi y no dispone de tantas librerías como las anteriores opciones.\\
@@ -281,7 +326,7 @@ while True:
 \end{lstlisting}
 \end{minipage}
 
-\subsubsection{NodeMCU}
+\paragraph{NodeMCU}\mbox{}\\
 NodeMCU es una plataforma de código abierto que incluye tanto el firmware basado en LUA como un módulo de desarrollo homónimo basado en los SoCs de Espressif, el lenguaje inicialmente se desarrolló para las placas NodeMCU pero ahora se puede ejecutar en cualquier módulo ESP.\\
 
 Su principal característica es que usa un modelo de programación similar a Node.js basado en la  asincronía  y en arquitectura dirigida por eventos, la mayoría de sus funciones tienen un parámetro para funciones \textit{callback}. Como desventaja LUA no es un lenguaje muy popular por lo que normalmente requerirá que el desarrollador tenga que aprender un nuevo lenguaje desde cero, además no dispone de un IDE por lo que empezar a trabajar con el no es tan sencillo como en el resto de opciones.\\
@@ -301,7 +346,7 @@ end)
 \end{lstlisting}
 \end{minipage}
 
-\subsubsection{Mongoose OS}
+\paragraph{Mongoose OS}\mbox{}\\
 Mongoose OS es una plataforma de desarrollo de código abierto enfocada a la integración con las plataformas cloud IoT como Amazon, Azureo Google, también dispone de una versión empresarial con licencia comercial que dispone de más funcionalidades la versión libre. Su propósito es ser un entorno completo para la creación de prototipos, desarrollo y gestión de dispositivos conectados.\\
 
 Una de sus principales ventajas es que permite programar tanto en JavaScript como en C, además dispone de un IDE muy completo con interfaz web. Su principal desventaja es que algunas librerías son de código cerrado y es necesario adquirir una licencia para poder utilizarlas. También cabe destacar que aunque la opción de programar con JS pueda resultar atractiva para un prototipado rápido durante el desarrollo no es recomendable usarlo en producción ya que tiene una mayor sobrecarga en consumo de memoria y CPU.\\
@@ -319,15 +364,15 @@ GPIO.blink(pin, 1000, 1000);
 \end{lstlisting}
 \end{minipage}
 
-\subsubsection{Elección}
+\paragraph{Elección}\mbox{}\\
 
 Tras analizar los \textit{frameworks} expuestos anteriormente se optó por elegir Arduino como solución para este proyecto, las razones para esta elección han sido su gran facilidad de uso  y sencillez, dispone de una gran comunidad y trayectoria por lo que es muy fácil encontrar información y respuestas a cualquier duda, dispone de una gran cantidad de librerías que facilitaran el trabajo y además a pesar de su gran nivel de abstracción podemos seguir accediendo a bajo nivel gracias a la integración con ESP-IDF, requisito necesario en este proyecto dada la necesidad de utilizar las funciones de monitorización del tráfico WiFi no disponibles en la mayoría de \textit{frameworks}.
 
-\section{Servidor central}
+\subsection{Servidor central}
 
 En esta sección se describirán las herramientas elegidas para el desarrollo del servidor central encargado de recibir y almacenar las detecciones de los sensores a través de una API REST y de mostrar estas detecciones de una forma amigable a través de una interfaz web. Para ello has sido necesario seleccionar un \textit{framework} web que nos permita desarrollar la aplicación web y una base de datos que nos provea de persistencia para almacenar las detecciones.
 
-\subsection{Framework web}
+\subsubsection{Framework web}
 
 En la actualidad existen muchas opciones para crear aplicaciones web en multitud de lenguajes de programación, algunos de los más conocido son Ruby on Rails (Ruby), Laravel (PHP), Spring (Java) y Django (Python). En la búsqueda de esta herramienta el principal requisito que se buscaba era la posibilidad de desarrollar en algún lenguaje ya conocido de forma que la curva de aprendizaje fuera menor y permitiera un desarrollo más rápido, ademas se planteaban otros requisitos deseables:
 
@@ -375,7 +420,7 @@ if __name__ == "__main__":
 \end{lstlisting}
 \end{minipage}
 
-\subsection{Base de datos}
+\subsubsection{Base de datos}
 
  Una vez definida la solución a utilizar para recolectar las detecciones es necesario definir como almacenaremos estas detecciones y para ello utilizaremos una base de datos. Cabe destacar que tal y como se indicó en los objetivos no es propósito de este proyecto el posterior procesamiento de estos datos, por tanto en la elección de esta solución no se tendrá tanto en cuenta el rendimiento en la lectura y agregación de los datos como el rendimiento de escritura y la simplicidad en la implementación e integración de la solución, también será valorable los conocimientos previos en la tecnología de cara a reducir el tiempo de desarrollo en este objetivo secundario.\\
 
@@ -385,7 +430,7 @@ Los sistemas de base de datos NoSQL presentan grandes ventajas para sistemas IoT
 
 Estos motivos junto a la familiaridad con los sistemas tradicionales SQL, su gran ecosistema y madurez en el mercado han llevado a seleccionar como solución el sistema de gestión de base de datos relacional PostgreSQL.
 
-\subsection{Herramientas de despliegue}
+\subsubsection{Herramientas de despliegue}
 
 Para el despliegue del servidor web y de la base de datos se ha decidido utilizar contenedores, tanto en la etapa de desarrollo como en la puesta en producción. En general, las ventajas que ofrece un entorno de despliegue de aplicaciones sobre contenedores son las siguientes:\\
 
