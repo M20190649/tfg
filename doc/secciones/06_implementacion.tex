@@ -275,8 +275,6 @@ A continuación se expone el listado de \textit{endpoints} expuestos junto a los
 
 La información devuelta por estos \textit{endpoints} utiliza el formato de documentos JSON, igualmente el formato utilizado por los clientes para el envío de las peticiones de inserción y modificación (POST y PUT) es JSON. En el Código \ref{lst:json_detection} se puede ver un ejemplo del documento JSON para las detecciones y en el Código \ref{lst:json_sensor} para los sensores.\\
 
-\medskip
-
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption=Ejemplo de JSON para detecciones, label={lst:json_detection}, captionpos=b, frame=single]
 {
@@ -287,8 +285,6 @@ La información devuelta por estos \textit{endpoints} utiliza el formato de docu
 \end{lstlisting}
 \end{minipage}
 
-\medskip
-
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption=Ejemplo de JSON para sensores, label={lst:json_sensor}, captionpos=b, frame=single]
 {
@@ -298,11 +294,7 @@ La información devuelta por estos \textit{endpoints} utiliza el formato de docu
 \end{lstlisting}
 \end{minipage}
 
-\medskip
-
 Un caso especial es el del \textit{endpoint} para inserción masiva de detecciones \textit{/detections-collection}, este \textit{endpoint} está compuesto por un solo método \textit{POST} que nos permite realizar una creación masiva de detecciones con una sola llamada HTTP, este diseño atípico surge de las restricciones de tiempo de procesamiento del sensor para el envío de las detecciones ya que realizar una conexión HTTP por cada detección supondría una gran sobrecarga para el sensor, además para este método se ha diseño un formato de documento JSON simplificado prescindiendo de las claves de los valores de detección para reducir el uso de memoria en el sensor, en el Código \ref{lst:json_detecciones_masivas} se puede ver un ejemplo de documento JSON utilizado para realizar una inserción de múltiples detecciones.\\
-
-\medskip
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption=Ejemplo de JSON para inserción masiva de detecciones, label={lst:json_detecciones_masivas},captionpos=b, frame=single]
@@ -317,11 +309,7 @@ Un caso especial es el del \textit{endpoint} para inserción masiva de deteccion
 \end{lstlisting}
 \end{minipage}
 
-\medskip
-
 Para facilitar el tratamiento de los documentos JSON se ha utilizado la extensión Flask-Marshmallow \cite{flask_marshmallow}, esta extensión se integra con la extensión Flask-SQLAlchemy y nos permite crear esquemas (Código \ref{lst:marshmallow_schemas}) basados en nuestros modelos de datos  (Código \ref{lst:sqlalchemy_models}) facilitando la deserialización de los documentos JSON recibidos en objetos y viceversa, además nos aporta una capa de validación de los datos basándose en los tipos definidos en las clases de nuestro modelos.\\
-
-\medskip
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, caption=Esquemas de datos de Flask-Marshmallow, label={lst:marshmallow_schemas},captionpos=b, frame=single]
@@ -350,11 +338,7 @@ sensors_schema = SensorSchema(many=True)
 \end{lstlisting}
 \end{minipage}
 
-\medskip
-
 Esta extensión nos permite reducir considerablemente el código necesario para tratar las peticiones a la API, en el Código \ref{lst:marshmallow_example} se muestra como ejemplo el tratamiento de la llamada a la API para crear un nuevo sensor, se puede observar como con una sola línea se realiza la validación y deserialización del documento JSON de entrada a un objeto de nuestra base de datos.\\
-
-\medskip
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, caption=Ejemplo de funcionamiento de Flask-Marshmallow, label={lst:marshmallow_example},captionpos=b, frame=single]
@@ -368,8 +352,6 @@ def new_sensor():
            {'Location': url_for('api.get_sensor', sensor_id=sensor.id)}
 \end{lstlisting}
 \end{minipage}
-
-\medskip
 
 \subsection{Frontal Web}
 
@@ -478,19 +460,16 @@ services:
 
 \subsubsection{Heroku}
 
-Para tener una mayor consistencia entre los entornos de desarrollo y producción se ha utilizado la funcionalidad de despliegue con contenedores de Heroku, esta funcionalidad nos permite construir la imagen del contenedor automáticamente al subir el código al repositorio de Heroku, tan solo es necesario definir la ubicación del Dockerfile para cada componente e indicar el proceso que debe ejecutar la aplicación al arrancar.\\
+Para tener una mayor consistencia entre los entornos de desarrollo y producción se ha utilizado la funcionalidad de despliegue con contenedores de Heroku, esta funcionalidad nos permite construir la imagen del contenedor automáticamente al subir el código al repositorio de Heroku, tan solo es necesario definir la ubicación del Dockerfile que se usará para construir el contenedor.\\
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption=Definición de aplicación de Heroku, captionpos=b, frame=single]
 build:
  docker:
    web: Dockerfile
-run:
- web: exec gunicorn vedetra-server:app
 \end{lstlisting}
 \end{minipage}
 
-
-
+Heroku no permite el uso de Docker Compose por lo que no podemos hacer un despliegue multicontenedor, por este motivo para el componente de la base de datos se ha utilizado el \textit{addon} Heroku PostgreSQL que nos permite desplegar una base de datos PostgreSQL con un simple comando.\\
 
 \end{document}

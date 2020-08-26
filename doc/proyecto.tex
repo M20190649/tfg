@@ -18,6 +18,10 @@
   frame=single,
   breaklines=true,
   postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+  escapeinside={\%*}{*)},
+  aboveskip=\bigskipamount,
+  belowskip=\bigskipamount,
+  showstringspaces=false
 }
 \usepackage[spanish, es-tabla]{babel} % Selecciona el español para palabras introducidas automáticamente, p.ej. "septiembre" en la fecha y especifica que se use la palabra Tabla en vez de Cuadro
 \usepackage{url} % ,href} %para incluir URLs e hipervínculos dentro del texto (aunque hay que instalar href)
@@ -26,7 +30,6 @@
 \usepackage[gen]{eurosym} %para incluir el símbolo del euro
 %\usepackage{cite} %para incluir citas del archivo <nombre>.bib
 \usepackage{enumerate}
-\usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{tabularx}
 \usepackage{booktabs}
@@ -35,11 +38,7 @@
 \addbibresource{bibliografia.bib}
 
 \usepackage[table,xcdraw]{xcolor}
-\hypersetup{
-	colorlinks=true,	% false: boxed links; true: colored links
-	linkcolor=black,	% color of internal links
-	urlcolor=cyan		% color of external links
-}
+
 \renewcommand{\familydefault}{\sfdefault}
 \usepackage{fancyhdr} % Custom headers and footers
 \pagestyle{fancyplain} % Makes all pages in the document conform to the custom headers and footers
@@ -61,8 +60,18 @@
 \setcounter{tocdepth}{3}
 \usepackage[Lenny]{fncychap}
 \usepackage{csquotes}
-
-
+\usepackage{appendix}
+\addto\captionsspanish{%
+  \renewcommand\appendixname{Anexo}
+  \renewcommand\appendixpagename{Anexos}
+  \renewcommand\appendixtocname{Anexos}
+}
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,	% false: boxed links; true: colored links
+	linkcolor=black,	% color of internal links
+	urlcolor=cyan		% color of external links
+}
 
 \begin{document}
 
@@ -112,14 +121,16 @@
 	%   5. Instalación de la aplicación de manera automática
 	\subfile{secciones/06_implementacion}
 
-	% Presupuesto
 
 	% Conclusiones
 	\subfile{secciones/07_conclusiones}
 
 	% Trabajos futuros
+  \appendix
+  \appendixpage
+  \addappheadtotoc
 
-
+  \subfile{anexos/01_instalacion}
 
 	\newpage
 
