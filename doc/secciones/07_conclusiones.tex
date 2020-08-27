@@ -2,4 +2,22 @@
 
 \begin{document}
 \chapter{Conclusiones y trabajos futuros}
+
+Tras el cumplimiento de los objetivos de este proyecto se ha conseguido demostrar que es posible utilizar dispositivos de bajo coste, en concreto SoCs, que nos permitan detectar personas y vehículos mediante la detección de tráfico WiFi y Bluetooth. El sensor desarrollado en base al SoC ESP32 nos permite realizar detecciones y transmitirlas a un servidor central por aproximadamente 10€, esto supone una gran reducción de coste respecto a otros sistemas analizados, por ejemplo, respecto a la solución basada en Raspberry Pi. Además también se ha demostrado la posibilidad de centralizar la recolección de estas detecciones en un servidor central que las almacenará de forma persistente y dónde se pueden consultar tanto a través de una interfaz web como a través de una API REST, también se ha demostrado la capacidad de desplegar este servicio sobre diferentes plataformas gracias a estar basado en contenedores, esto nos permite adaptar el despliegue fácilmente a diferentes infraestructuras ya sean servidores propios o soluciones \textit{Cloud} .\\
+
+Al iniciar este proyecto se partía con una base en desarrollo de sistemas web y microcontroladores gracias a haber cursado las menciones de Tecnologías de la Información e Ingeniería de Computadores , este conocimiento previo ha resultado de gran utilidad durante el desarrollo del servidor central ya que incluso se había trabajado previamente con muchas de las herramientas utilizadas en este proyecto. Por otra parte el conocimiento en microcontroladores adquirido en la mención de Ingeniería de Computadores aunque amplio en el desarrollo de sistemas más a bajo nivel como controladores PIC,  no ahondaba así tanto en plataformas de desarrollo de alto nivel como Arduino por lo que ha sido necesario un mayor estudio de estas soluciones, sin embargo ha resultado de gran utilidad el conocimiento de como funcionan estos sistemas «bajo el capó». \\
+
+Respecto al funcionamiento de las tecnologías inalámbricas sobre las que se funda este proyecto, al inició se partió con una idea muy básica de su funcionamiento, pero durante el análisis del problema gracias al estudio de los documentos de definición de los estándares y otras fuente se ha adquirido un conocimiento más profundo sobre el funcionamiento de los protocolos WiFi y Bluetooth.\\
+
+Una de las mayores lecciones aprendidas por las malas durante el desarrollo del proyecto ha sido la importancia de las primeras fases de un proyecto como son el análisis y la planificación, por ejemplo, en la fase de análisis se realizó una mala elección del módulo utilizado para desarrollar el sensor por no tener en cuenta los costes derivados de la integración con un módulo Bluetooth externo, esto provocó una gran perdida de tiempo ya que requirió volver a estudiar las soluciones y tener que reescribir gran parte del código ya desarrollado. También ha sido un gran error el no ceñirse a los objetivos del proyecto sin divagar por posibles mejoras que aunque atractivas para el resultado final nos desvían de los objetivos principales aún no conseguidos. Todos estos errores me han hecho aprender una gran lección y es que estas fases, muchas veces descuidadas por las prisas de ponerse manos a la obra, son las más importantes de un proyecto.\\
+
+Como se ha comentado anteriormente, durante el transcurso de este proyecto se han observado posibles mejoras del sistema que a pesar de no estar dentro de los objetivos o no ser alcanzables dados los recursos materiales o de tiempo podrían ser interesantes de cara a futuros trabajos, algunas de ellas se describen a continuación:\\
+
+\begin{itemize}
+  \item El sensor desarrollado en este proyecto requiere de conexión a una red WiFi para enviar las detecciones al servidor central, sería interesante un enfoque con tecnologías de largo alcance como LoRa o Sigfox que permitiera despliegues más versátiles.
+  \item Ampliar los datos recogidos por el sensor que nos permitan una mejor caracterización de los dispositivos detectados, por ejemplo, la fuerza de la señal.
+  \item Añadir al servidor central integración con un sistema de mapas para poder visualizar los sensores desplegados y las detecciones de una forma más intuitiva.
+  \item Desarrollar un sistema de alimentación autónomo para los sensores, por ejemplo, con placas solares.
+
+\end{itemize}
 \end{document}
