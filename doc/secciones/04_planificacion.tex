@@ -3,10 +3,54 @@
 \begin{document}
 \chapter{Planificación}
 
-\section{Metodología utilizada}
+\section{Metodología de desarrollo}
+
+Para el desarrollo de este proyecto se ha decido utilizar metodologías de desarrollo ágiles, basadas en metodologías de desarrollo iterativo e incremental nos proporcionan un enfoque donde los requisitos y soluciones evolucionan con el tiempo según la necesidad del proyecto. Este tipo de metodologías son idóneas para proyectos donde hay gran incertidumbre e incógnitas que se irán resolviendo conforme el proyecto avance,  entendiendo que hay proyectos como este en los que es imposible definir el producto perfecto de antemano sin que se haya ido validando y puliendo gracias a las pruebas con el entorno real.\\
+
+Existen multitud de metodologías ágiles y tras analizar las más conocidas ninguna se adaptaba totalmente a las características de este proyecto, sobre todo las técnicas enfocadas a trabajo en equipo dado que este proyecto se desarrolla por una sola persona, por ejemplo, la programación por parejas de la metodología de programación extrema (XP) o los flujos de Scrum basados en diferentes roles dentro del equipo. Por tanto se ha decidido utilizar una mezcla de varías metodologías, en concreto, Scrum, XP y Kanban. De las metodologías Scrum y XP se ha adoptado el desarrollo en ciclos cortos con la finalidad de conseguir funcionalidades concretas y que aporten valor lo más pronto posible. Esta característica nos proporciona entregas funcionales frecuentes que nos facilitan detectar problemas en el diseño y nuevas necesidades no previstas de una forma temprana y actuar con estrategias de desarrollo incremental.\\
+
+Para la gestión del flujo de tareas se ha utilizado el característico tablero de tarjetas del método Kanban, en este método las tarjetas simbolizan diferentes tareas del proyecto y se organizan en columnas a lo largo del tablero, estas columnas representan los diferentes estados dentro del flujo de trabajo, por ejemplo, tareas pendientes, en ejecución, pendientes de revisión y finalizadas. Esta forma de visualizar el flujo de trabajo nos proporciona una rápida visión del estado actual del proyecto, además nos permite etiquetar y priorizar fácilmente las tareas. Para aplicar este método se ha utilizado la herramienta Trello.\\
 
 
 \section{Temporización}
 
-\section{Seguimiento del desarrollo}
+Dada la naturaleza iterativa de la metodología usada en este proyecto no se es posible establecer una linealidad  temporal de las diferentes fases ni una fecha de inicio y fin ya que en cada iteración se ha vuelto pasar por estas fases, sin embargo se ha llevado una contabilización del tiempo empleado en cada una de las fases que se muestra a continuación:\\
+
+\noindent{\textbf{Fases}}
+\begin{itemize}
+  \item Fase inicial (Estado del arte y definición de objetivos): 12 h
+  \item Análisis del problema: 40 h
+  \item Análisis de las soluciones: 40 h
+  \item Implementación:
+  \begin{itemize}
+    \item Sensor: 150 h
+    \item Servidor central: 180 h
+  \end{itemize}
+  \item Elaboración de la memoria: 60 h
+\end{itemize}
+
+
+\section{Presupuesto}
+
+El siguiente presupuesto muestra una estimación del coste del desarrollo de este proyecto, por supuesto en un despliegue real dónde habría cientos o miles de sensores este presupuesto variaría no solo por el coste en sí de los sensores si no también por el coste instalación y otros costes derivados.\\
+
+Las cifras de coste mano de obra se han calculado en base al coste medio de un trabajador de categoría júnior, aunque en un proyecto real sería recomendable dedicar al menos un 20\% del tiempo del proyecto a un perfil sénior para el diseño y supervisión. Para el diseño de este presupuesto se ha utilizado un modelo de consultoría en el que se realiza la oferta basándose meramente en el número total de horas dedicado.\\
+
+Todas las herramientas software utilizadas en este proyecto se ofrecen gratuitamente, aunque cabe destacar que para el despliegue del servidor central se ha utilizado el plan gratuito del proveedor PaaS Heroku, este plan ofrece el rendimiento necesario para el desarrollo del proyecto pero para un plan de despliegue real sería necesario utilizar un plan de pago que variaría dependiendo del número de sensores desplegados.\\
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ |l|r|r|r| }
+\hline
+\textbf{Concepto} & \textbf{Precio/unidad (€)} & \textbf{Unidades} & \textbf{Total (€)}\\
+\hline\hline
+Mano de obra  & 18  &  482  & 8.676   \\ \hline
+ESP32 DevKitC  & 8,5  & 2 & 17\\ \hline
+Equipo informático & 1.000 & 1 & 1.000 \\ \hline
+ &  & \textbf{Total} & 9.693\\ \hline
+\end{tabular}
+\caption{Presupuesto del proyecto}
+\label{table:presupuesto_proyecto}
+\end{table}
+
 \end{document}
