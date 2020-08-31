@@ -8,17 +8,26 @@ El principal objetivo de este proyecto es desarrollar un sensor de detección de
 Para facilitar la visualización de estas detecciones se plantea un objetivo secundario consistente en el desarrollo de un servidor central que permita recopilar las detecciones de los sensores, este servidor constará de una API REST para facilitar el envío de las detecciones además de una interfaz web para poderlas visualizar cómodamente. El código de este servidor se puede consultar en el siguiente repositorio: https://github.com/adalsa91/vedetra-server.
 
 ---
-##Documentación
+## Documentación
 
 La documentación de este proyecto está realizada con `LaTeX`, por lo tanto para generar el archivo PDF necesitaremos instalar `TeXLive` y `biber` en nuestra distribución.
 
-Una vez instalada, tan solo deberemos situarnos en el directorio `doc` y ejecutar los siguientes comandos:
+Una vez instaladas tan solo deberemos situarnos en el directorio `doc` y ejecutar el siguiente comando:
 
-`
+```bash
+$ make doc
+```
+
+Sería equivalente a ejecutar los siguientes comandos:
+
+
+```bash
 $ pdflatex proyecto.tex
 $ biber ./proyecto.bcf
 $ pdflatex proyecto.tex
-`
+```
+
+Tras la ejecución se creará un documento PDF con el nombre `proyecto.tfg` en la raíz de la carpeta `doc`.
 
 # INSTRUCCIONES
 
