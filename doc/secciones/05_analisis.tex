@@ -258,47 +258,44 @@ Por las razones expuestas inicialmente se decidió utilizar el SoC ESP8266 junto
 Actualmente existen multitud de \textit{frameworks} de desarrollo para el SoC ESP32, basados en una gran variedad de lenguajes como: C, C++, Python, JavaScript o Lua. A continuación se analizan algunos de los  \textit{frameworks} más usados.\\
 
 \paragraph{Espressif IoT Development Framework (ESP-IDF)}\mbox{}\\
-ESP-IDF es el \textit{framework} de desarrollo oficial creado por Espressif Systems para el SoC ESP32. Está escrito principalmente en C  y está basado en el sistema operativo en tiempo real FreeRTOS. Es uno de los más usados y tiene una gran comunidad siendo fácil encontrar ayuda en sus foros oficiales, además cuenta con una extensa documentación oficial. La mayoría de \textit{frameworks} que trabajan sobre C o C++ están construidos sobre la API de ESP-IDF. Para trabajar con el solo es necesaria la toolchain propia, algunas herramientas de construcción (CMake y Ninja) y por supuesto el propio paquete ESP-IDF que contiene la API y algunos scripts para facilitar el uso de la toolchain. Con estas herramientas y un simple editor de texto ya podríamos empezar a crear aplicaciones para el ESP32 aunque es recomendable utilizar algún IDE como PlatformIO IDE.\\
+ESP-IDF es el \textit{framework} de desarrollo oficial creado por Espressif Systems para el SoC ESP32. Está escrito principalmente en C  y está basado en el sistema operativo en tiempo real FreeRTOS. Es uno de los más usados y tiene una gran comunidad siendo fácil encontrar ayuda en sus foros oficiales, además cuenta con una extensa documentación oficial. La mayoría de \textit{frameworks} que trabajan sobre C o C++ están construidos sobre la API de ESP-IDF. Para trabajar con el solo es necesaria la \textit{toolchain} propia, algunas herramientas de construcción (CMake y Ninja) y por supuesto el propio paquete ESP-IDF que contiene la API y algunos scripts para facilitar el uso de la \textit{toolchain}. Con estas herramientas y un simple editor de texto ya podríamos empezar a crear aplicaciones para el ESP32 aunque es recomendable utilizar algún IDE como PlatformIO IDE.\\
 
- Las principales ventajas de este \textit{framework} es que al ser el oficial del fabricante es en el que primero obtendremos nuevas funcionalidades y parches de seguridad, otra de sus ventajas es que al tener un menor nivel de abstracción que permite un acceso a más bajo nivel que el resto, esto a su vez es su desventaja ya resulta en un código más extenso, a continuación podemos ver un ejemplo de un código para hacer parpadear un led.\\
-
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=C, caption=Ejemplo de código para hacer parpadear un led con ESP-IDF, captionpos=b, frame=single]
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "driver/gpio.h"
-#include "sdkconfig.h"
-
-#define BLINK_GPIO CONFIG_BLINK_GPIO
-
-void app_main(void)
-{
-    gpio_reset_pin(BLINK_GPIO);
-    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
-    while(1) {
-        gpio_set_level(BLINK_GPIO, 0);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        gpio_set_level(BLINK_GPIO, 1);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-\end{lstlisting}
-\end{minipage}
+ Las principales ventajas de este \textit{framework} es que al ser el oficial del fabricante es en el que primero obtendremos nuevas funcionalidades y parches de seguridad, otra de sus ventajas es que al tener un menor nivel de abstracción que permite un acceso a más bajo nivel que el resto, esto a su vez es su desventaja ya resulta en un código más extenso.
 
 \paragraph{Arduino}\mbox{}\\
 Arduino es una plataforma de código abierto utilizada para la construcción de proyectos de electrónica, dentro de está plataforma encontramos el lenguaje de programación Arduino y el entorno de desarrollo IDE. Arduino es un lenguaje potente y sencillo que permite desarrollar proyectos en C/C++ sin requerir grandes conocimientos de electrónica. Gracias a su espíritu de código abierto ha crecido una gran comunidad a su alrededor que ha contribuido creando todo tipo de librerías y herramientas.\\
 
-Este lenguaje fue inicialmente diseñados para utilizar sobre las placas Arduino pero con su creciente popularidad se han realizado multitud de adaptaciones para usarlo en otros microcontroladores como es el caso del ESP32, esta adaptación esta basada en ESP-IDF y fue realizada por el propio fabricante del SoC Espressif Systems, permite un mayor nivel de abstracción y acceso a una gran cantidad de librerías sin perder acceso a funcionalidades a más bajo nivel usando funciones del ESP-IDF ya que las librerías están integradas en la compilación de la librería de Arduino.\\
+Este lenguaje fue inicialmente diseñado para utilizarse sobre las placas Arduino pero con su creciente popularidad se han realizado multitud de adaptaciones para usarlo en otros microcontroladores como es el caso del ESP32, esta adaptación esta basada en ESP-IDF y fue realizada por el propio fabricante del SoC Espressif Systems, permite un mayor nivel de abstracción y acceso a una gran cantidad de librerías sin perder acceso a funcionalidades a más bajo nivel usando funciones del ESP-IDF ya que las librerías están integradas en la compilación de la librería de Arduino.\\
 
 Resumiendo, sus principales ventajas son el nivel de abstracción y su comunidad, otra de sus ventajas es el entorno de desarrollo Arduino IDE que permite realizar de forma sencilla acciones como compilar o subir el código a la placa, también posible utilizarlo con el IDE de PlatformIO, ambos disponen de un gestor de librerías que permite buscar e instalarlas fácilmente. Como desventaja el tener un mayor nivel de abstracción siempre implica perder algo de control.\\
 
+\paragraph{MicroPython}\mbox{}\\
+MicroPython es una implementación del lenguaje de programación Python 3 que incluye una pequeño subconjunto de la biblioteca estándar de Python y está optimizada para ejecutarse en microcontroladores. Originalmente fue diseñado para ejecutarse sobre la placa PyBoard pero actualmente se ha adaptado a un amplio número de arquitecturas. No dispone de un IDE propio pero hay varias alternativas como uPyCraft, Thonny o  VSCode con la extensión PyMark.\\
+
+Su principal ventaja además de portar la simplicidad del lenguaje Python al mundo de los microcontroladores es que una vez cargado en la placa podemos ejecutar comandos en el ESP32 directamente a través del serial como si fuera una consola Python normal y corriente, esto agiliza mucho el proceso de desarrollo ya que permite realizar pruebas sin tiempos de compilación ni de subida a la placa. Su mayor desventaja es que no permite acceder  a funciones a bajo nivel por ejemplo para las funcionalidades WiFi y no dispone de tantas librerías como las anteriores opciones.\\
+
+\paragraph{NodeMCU}\mbox{}\\
+NodeMCU es una plataforma de código abierto que incluye tanto el firmware basado en LUA como un módulo de desarrollo homónimo basado en los SoCs de Espressif, el lenguaje inicialmente se desarrolló para las placas NodeMCU pero ahora se puede ejecutar en cualquier módulo ESP.\\
+
+Su principal característica es que usa un modelo de programación similar a Node.js basado en la  asincronía  y en arquitectura dirigida por eventos, la mayoría de sus funciones tienen un parámetro para funciones \textit{callback}. Como desventaja LUA no es un lenguaje muy popular por lo que normalmente requerirá que el desarrollador tenga que aprender un nuevo lenguaje desde cero, además no dispone de un IDE por lo que empezar a trabajar con el no es tan sencillo como en el resto de opciones.\\
+
+\paragraph{Mongoose OS}\mbox{}\\
+Mongoose OS es una plataforma de desarrollo de código abierto enfocada a la integración con las plataformas cloud IoT como Amazon, Azureo Google, también dispone de una versión empresarial con licencia comercial que dispone de más funcionalidades la versión libre. Su propósito es ser un entorno completo para la creación de prototipos, desarrollo y gestión de dispositivos conectados.\\
+
+Una de sus principales ventajas es que permite programar tanto en JavaScript como en C, además dispone de un IDE muy completo con interfaz web. Su principal desventaja es que algunas librerías son de código cerrado y es necesario adquirir una licencia para poder utilizarlas. También cabe destacar que aunque la opción de programar con JS pueda resultar atractiva para un prototipado rápido durante el desarrollo no es recomendable usarlo en producción ya que tiene una mayor sobrecarga en consumo de memoria y CPU.\\
+
+\paragraph{Elección}\mbox{}\\
+
+Tras analizar los \textit{frameworks} expuestos anteriormente se optó por elegir Arduino como solución para este proyecto, las razones para esta elección han sido su gran facilidad de uso y sencillez como se puede ver en el Código \ref{lst:sqlalchemy_models}, dispone de una gran comunidad y trayectoria por lo que es muy fácil encontrar información y respuestas a cualquier duda, dispone de una gran cantidad de librerías que facilitaran el trabajo y además a pesar de su gran nivel de abstracción podemos seguir accediendo a bajo nivel gracias a la integración con ESP-IDF, requisito necesario en este proyecto dada la necesidad de utilizar las funciones de monitorización del tráfico WiFi no disponibles en la mayoría de \textit{frameworks}.\\
+
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[language=C, caption=Ejemplo de código para hacer parpadear un led con Arduino, captionpos=b, frame=single]
+\begin{lstlisting}[language=C, caption=Ejemplo de código para hacer parpadear un led con Arduino, captionpos=b, frame=single, label={lst:arduino_example}]
 const int LED_BUILTIN = 2;
+
 void setup() {
   pinMode (LED_BUILTIN, OUTPUT);
 }
+
 void loop() {
   digitalWrite(LED_BUILTIN, HIGH);
   delay(1000);
@@ -307,66 +304,6 @@ void loop() {
 }
 \end{lstlisting}
 \end{minipage}
-
-\paragraph{MicroPython}\mbox{}\\
-MicroPython es una implementación del lenguaje de programación Python 3 que incluye una pequeño subconjunto de la biblioteca estándar de Python y está optimizada para ejecutarse en microcontroladores. Originalmente fue diseñado para ejecutarse sobre la placa PyBoard pero actualmente se ha adaptado a un amplio número de arquitecturas. No dispone de un IDE propio pero hay varias alternativas como uPyCraft, Thonny o  VSCode con la extensión PyMark.\\
-
-Su principal ventaja además de portar la simplicidad del lenguaje Python al mundo de los microcontroladores es que una vez cargado en la placa podemos ejecutar comandos en el ESP32 directamente a través del serial como si fuera una consola Python normal y corriente, esto agiliza mucho el proceso de desarrollo ya que permite realizar pruebas sin tiempos de compilación ni de subida a la placa. Su mayor desventaja es que no permite acceder  a funciones a bajo nivel por ejemplo para las funcionalidades WiFi y no dispone de tantas librerías como las anteriores opciones.\\
-
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=Python, caption=Ejemplo de código para hacer parpadear un led con MicroPython, captionpos=b, frame=single]
-from machine import Pin
-import time import sleep
-
-led=Pin(2, Pin.OUT)
-
-while True:
-  led.value(not led.value())
-  time.sleep(1)
-\end{lstlisting}
-\end{minipage}
-
-\paragraph{NodeMCU}\mbox{}\\
-NodeMCU es una plataforma de código abierto que incluye tanto el firmware basado en LUA como un módulo de desarrollo homónimo basado en los SoCs de Espressif, el lenguaje inicialmente se desarrolló para las placas NodeMCU pero ahora se puede ejecutar en cualquier módulo ESP.\\
-
-Su principal característica es que usa un modelo de programación similar a Node.js basado en la  asincronía  y en arquitectura dirigida por eventos, la mayoría de sus funciones tienen un parámetro para funciones \textit{callback}. Como desventaja LUA no es un lenguaje muy popular por lo que normalmente requerirá que el desarrollador tenga que aprender un nuevo lenguaje desde cero, además no dispone de un IDE por lo que empezar a trabajar con el no es tan sencillo como en el resto de opciones.\\
-
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language={[5.0]Lua}, caption=Ejemplo de código para hacer parpadear un led con NodeMCU, captionpos=b, frame=single]
-lighton=0
-tmr.alarm(0,1000,1,function()
-if lighton==0 then
-    lighton=1
-    led(512,512,512)
-else
-    lighton=0
-    led(0,0,0)
-end
-end)
-\end{lstlisting}
-\end{minipage}
-
-\paragraph{Mongoose OS}\mbox{}\\
-Mongoose OS es una plataforma de desarrollo de código abierto enfocada a la integración con las plataformas cloud IoT como Amazon, Azureo Google, también dispone de una versión empresarial con licencia comercial que dispone de más funcionalidades la versión libre. Su propósito es ser un entorno completo para la creación de prototipos, desarrollo y gestión de dispositivos conectados.\\
-
-Una de sus principales ventajas es que permite programar tanto en JavaScript como en C, además dispone de un IDE muy completo con interfaz web. Su principal desventaja es que algunas librerías son de código cerrado y es necesario adquirir una licencia para poder utilizarlas. También cabe destacar que aunque la opción de programar con JS pueda resultar atractiva para un prototipado rápido durante el desarrollo no es recomendable usarlo en producción ya que tiene una mayor sobrecarga en consumo de memoria y CPU.\\
-
-
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[caption=Ejemplo de código para hacer parpadear un led con Moongose, captionpos=b, frame=single]
-load('api_gpio.js');
-load('api_timer.js');
-
-let PIN = 2;
-
-GPIO.set_mode(PIN, GPIO.MODE_OUTPUT);
-GPIO.blink(pin, 1000, 1000);
-\end{lstlisting}
-\end{minipage}
-
-\paragraph{Elección}\mbox{}\\
-
-Tras analizar los \textit{frameworks} expuestos anteriormente se optó por elegir Arduino como solución para este proyecto, las razones para esta elección han sido su gran facilidad de uso  y sencillez, dispone de una gran comunidad y trayectoria por lo que es muy fácil encontrar información y respuestas a cualquier duda, dispone de una gran cantidad de librerías que facilitaran el trabajo y además a pesar de su gran nivel de abstracción podemos seguir accediendo a bajo nivel gracias a la integración con ESP-IDF, requisito necesario en este proyecto dada la necesidad de utilizar las funciones de monitorización del tráfico WiFi no disponibles en la mayoría de \textit{frameworks}.
 
 \subsection{Servidor central}
 
