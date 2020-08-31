@@ -74,33 +74,27 @@ Además de estos requisitos se definen otros aspectos no indispensables pero des
 \end{itemize}
 
 \paragraph{Arduino}\mbox{}\\
-Una de las primeras plataformas analizadas fue Arduino por su gran popularidad, estas placas empezaron su andadura en el 2005 y han cosechado una gran comunidad, pero hasta hace relativamente poco no ofrecían soluciones con conectividad WiFI y Bluetooth integrada si no que se basaban en el uso de módulos de expansión (\textit{shields}) para dotar a sus placas de conectividad inalámbrica lo cual encarecía el coste final, pero en 2018 decidieron cambiar con la placa ARDUINO MKR WIFI 1010 \cite{arduino_mkr_wifi_1010}, utiliza el SoC ESP32 fabricado por U-BLOX y dispone de conectividad WiFi y Bluetooth integrada en un empaquetado de solo 61.5x25 mm, más tarde en 2019 lanzaron el modelo ARDUINO NANO 33 IOT \cite{arduino_nano_33_iot} (Figura \ref{fig:arduino_nano_33_iot}) con prácticamente las mismas características y algunas mejoras como la inclusión de un acelerómetro pero sacrificando el conector de batería y la compatibilidad con los \textit{shields} en favor de un menor tamaño (48 × 18 mm) y menor coste. Esta última solución encajaba con la mayoría de los requisitos excepto con el coste, tiene un precio de aproximadamente 25€ que queda muy por encima del objetivo de coste, además su poca madurez en el mercado juega también en su contra.
+
+Una de las primeras plataformas analizadas fue Arduino por su gran popularidad, estas placas empezaron su andadura en el 2005 y han cosechado una gran comunidad, pero hasta hace relativamente poco no ofrecían soluciones con conectividad WiFi y Bluetooth integrada si no que se basaban en el uso de módulos de expansión (\textit{shields}) para dotar a sus placas de conectividad inalámbrica lo cual encarecía el coste final, pero en 2018 decidieron cambiar con la placa Arduino MKR WiFi 1010 \cite{arduino_mkr_wifi_1010}, utiliza el SoC ESP32 fabricado por U-BLOX y dispone de conectividad WiFi y Bluetooth integrada en un empaquetado de solo 61.5x25 mm, más tarde en 2019 lanzaron el modelo Arduino Nano 33 IOT \cite{arduino_nano_33_iot} (Figura \ref{fig:arduino_nano_33_iot}) con prácticamente las mismas características y algunas mejoras como la inclusión de un acelerómetro pero sacrificando el conector de batería y la compatibilidad con los \textit{shields} en favor de un menor tamaño (48 × 18 mm) y menor coste. Esta última solución encajaba con la mayoría de los requisitos excepto con el coste, tiene un precio de aproximadamente 25€ que queda muy por encima del objetivo de coste, además su poca madurez en el mercado juega también en su contra.
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.5]{analisis/arduino_nano_33_iot}
-\caption{ARDUINO NANO 33 IOT}
+\includegraphics[scale=0.45]{analisis/arduino_nano_33_iot}
+\caption{Arduino Nano 33 IOT}
 \label{fig:arduino_nano_33_iot}
 \end{figure}
 
 \paragraph{Espressif Systems SoCs}\mbox{}\\
+
 Espressif es una compañía fundada en 2008 en China y con sede en Shanghai enfocada en el desarrollo de soluciones IoT que desarrolla \textit{chipsets} y módulos WiFi y/o Bluetooth/BLE de pequeñas dimensiones con un gran rendimiento, bajo consumo y coste enfocados principalmente a dotar de conectividad a los productos de otras compañías. Son los creadores de los populares SoCs ESP8266 y ESP32 que además tener una gran penetración en el mercado de IoT han tenido un gran éxito en la comunidad \textit{maker}.\\
 
-\noindent{\textbf{ESP8266}}\\
+\noindent{\textbf{ESP8266}}
 
-El ESP8266, oficialmente ESP8266EX, es un SoC WiFi de bajo coste con una pila TCP/IP lanzado al mercado en 2014 \cite{esp8266_overview}, este fue el módulo con el que Espressif comenzó a popularizarse. Se comercializa principalmente en tres formatos: SoC, módulos y módulos de desarrollo (\textit{DevKit})\\
+El ESP8266, oficialmente ESP8266EX, es un SoC WiFi de bajo coste con una pila TCP/IP lanzado al mercado en 2014 \cite{esp8266_overview}, este fue el módulo con el que Espressif comenzó a popularizarse. Se comercializa principalmente en tres formatos: SoC, módulos y módulos de desarrollo (\textit{DevKit}). Espressif desarrollo este SoC pensando en las necesidades de la industria del Internet of Things, como son el bajo consumo energético, un diseño compacto y la fiabilidad y durabilidad. Con una capacidad WiFI completa y autónoma puede funcionar de forma independiente o como adaptador WiFi para cualquier controlador a través de las interfaces SPI/SDIO o UART. Estas cualidades han propiciado que su utilización se haya extendido en la industria de la domótica, por ejemplo, en enchufes y bombillas inteligentes. \\
 
-Espressif desarrollo este SoC pensando en las necesidades de la industria del Internet of Things, como son el bajo consumo energético, un diseño compacto y la fiabilidad y durabilidad. Con una capacidad WiFI completa y autónoma puede funcionar de forma independiente o como adaptador WiFi para cualquier controlador a través de las interfaces SPI/SDIO o UART. Estas cualidades han propiciado que su utilización se haya extendido en la industria de la domótica, por ejemplo, en enchufes y bombillas inteligentes. \\
+Integra un microcontrolador Tensilica L106 de 32 bits (RISC) de bajo consumo que trabaja a unos 80 MHz por defecto pudiendo alcanzar hasta 160 MHz. Además incorpora otros componentes de interfaz como SDIO, SPI, I2C, I2S, UART, PWM, conversor ADC de 10 bits y 17 GPIO. Todos estos componentes se encuentran empaquetados en tan solo 5 mm x 5 mm en un formato QFN de 32 pines. En el SoC no viene incluida la memoria ROM, debe utilizarse una flash externa por SPI y soporta hasta 16 MB. \cite{esp8266_datasheet}. Uno de sus principales atractivos es el precio, se pueden adquirir por menos de 1€ en los distribuidores oficiales de Espressif \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}\\
 
-Integra un microcontrolador Tensilica L106 de 32 bits (RISC) de bajo consumo que trabaja a unos 80 MHz por defecto pudiendo alcanzar hasta 160 MHz. Además incorpora otros componentes de interfaz como SDIO, SPI, I2C, I2S, UART, PWM, conversor ADC de 10 bits y 17 GPIO. Todos estos componentes se encuentran empaquetados en tan solo 5 mm x 5 mm en un formato QFN de 32 pines (Figura \ref{fig:esp8266_soc_pinout}). En el SoC no viene incluida la memoria ROM, debe utilizarse una flash externa por SPI y soporta hasta 16 MB. \cite{esp8266_datasheet}. Uno de sus principales atractivos es el precio, se pueden adquirir por menos de 1€ en los distribuidores oficiales de Espressif \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}\\
-
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.5]{analisis/esp8266_soc_pinout}
-\caption{ESP8266EX SoC Pinout}
-\label{fig:esp8266_soc_pinout}
-\end{figure}
+Debido a que el ESP8266 viene en un pequeño empaquetado (QFN-21) algunos fabricantes han desarrollado módulos (MCU) que facilitan su uso, proporcionando componentes necesarios para el desarrollo como son la memoria flash externa y pines externos para GPIO.\\
 
 \begin{table}[H]
 \centering
@@ -121,51 +115,35 @@ Rango de frecuencias WiFi & 2.4G $\sim$ 2.5G (2400M $\sim$ 2483.5M) \\ \hline
 \label{table:caracteristicas_esp8266}
 \end{table}
 
-Debido a que el ESP8266 viene en un pequeño empaquetado (QFN-21) algunos fabricantes han desarrollado módulos (MCU) que facilitan su uso, proporcionando componentes necesarios para el desarrollo como son la memoria flash externa y pines externos para GPIO.\\
+Espressif dispone de sus propio módulos, la serie ESP-WROOM-02 \cite{espwroom02_overview}, el módulo base \cite{espwroom02_datasheet} lleva el mismo nombre que la serie y tiene un tamaño de 18 mm x 20 mm e integran una memoria flash SPI de 2 MB y una antena PCB, además dispone de 18 pines. Existen otros modelos de la serie con 4MB de memoria flash y con conectores IPEX para una antena externa en lugar de la antena PCB. El precio medio de esta serie es de 2,50€ \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}\\
 
-Espressif dispone de sus propio módulos, la serie ESP-WROOM-02 \cite{espwroom02_overview}, el módulo base \cite{espwroom02_datasheet} lleva el mismo nombre que la serie y tiene un tamaño de 18 mm x 20 mm e integran una memoria flash SPI de 2 MB y una antena PCB, además dispone de 18 pines (Figura \ref{fig:esp01_pinout}). Existen otros modelos de la serie con 4MB de memoria flash y con conectores IPEX para una antena externa en lugar de la antena PCB. El precio medio de esta serie es de 2,50€ \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}\\
-
-\begin{figure}[h]
-\centering
-\includegraphics[scale=0.2]{analisis/esp_wroom_02}
-\caption{Módulo ESP-WROOM-02}
-\label{fig:esp_wrom_02}
-\end{figure}
-
-A pesar de que el fabricante original del ESP8266, Espressif, dispone de sus propios módulos, este SoC empezó realmente a popularizarse en el 2014 con el módulo ESP-01 creado por un tercer fabricante, Ai-Thinker. El módulo añade una memoria flash externa QSPI, una antena impresa en la PCB y proporciona salida para algunos de los pines del ESP8266 (Figura \ref{fig:esp01_pinout}).\\
+A pesar de que el fabricante original del ESP8266, Espressif, dispone de sus propios módulos, este SoC empezó realmente a popularizarse en 2014 con el módulo ESP-01 creado por un tercer fabricante, Ai-Thinker. El módulo añade una memoria flash externa QSPI, una antena impresa en la PCB y proporciona salida para algunos de los pines del ESP8266. Desde este primer modelo se han desarrollado multitud de modelos con variaciones respecto al número de pines expuestos, tipo de antena y memoria flash; pero manteniendo el mismo SoC ESP8266EX. Se les conoce como módulos ESP-XX, el modelo más utilizado de esta serie es el ESP-12 (Figura \ref{fig:esp12}). \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.5]{analisis/esp01_pinout}
-\caption{ESP-01 Pinout}
-\label{fig:esp01_pinout}
+\includegraphics[scale=0.12]{analisis/esp12}
+\caption{Módulo ESP-12S}
+\label{fig:esp12}
 \end{figure}
 
-Desde este primer modelo se han desarrollado multitud de modelos con variaciones respecto al número de pines expuestos, tipo de antena y memoria flash; pero manteniendo el mismo SoC ESP8266EX. Se les conoce como módulos ESP-XX y la última versión es el ESP-14 que combina en el mismo encapsulado el SoC ESP8266EX junto con un microcontrolador STMicro STMS003F3P6. Aunque el modelo más utilizado de esta serie es el ESP-12 y sus variantes con apantallamiento y un mayor número de conexiones, en concreto 22, a excepción del módulo ESP-12S que cuenta con 16. (Figura \ref{fig:esp12e_pinout}).\\
+\newpage
+
+Aunque estos módulos son más cómodos seguimos teniendo la necesidad de adquirir un adaptador USB-Serial, un regulador de voltaje y cablearlos al módulo para poder programarlo y alimentarlo. Para suplir estas necesidades nacieron los módulos de desarrollo (Devkits), estos módulos están enfocados al desarrollo y a facilitar la creación de prototipos, para ello incluyen un puente USB-Serial integrado en la placa y un conector micro-USB junto con un regulador de voltaje para proporcionar energía a la placa y conectividad con el ordenador, además de otras facilidades como botones, leds o conectores para baterías y antenas.\\
+
+Algunos modelos están basado en módulos ESP-XX de Ai-Thinker como el Adafruit Feather HUZZAH \cite{adafruit_feather_huzzah} que utiliza un módulo Ai-Thinker ESP-12S, en la figura \ref{fig:adafruit_feather_huzzah_pinout_2} se pude apreciar como el módulo de Ai-thinker está soldado directamente encima de la placa de desarrollo.\\~\\
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.5]{analisis/esp12e_pinout}
-\caption{ESP-12E Pinout}
-\label{fig:esp12e_pinout}
-\end{figure}
-
-Aunque estos módulos son más cómodos seguimos teniendo la necesidad de adquirir un adaptador USB-Serial y un regulador de voltaje y cablearlos al módulo para poder programarlo.Para suplir estas necesidades nacieron los módulos de desarrollo (Devkits), estos módulos están enfocados al desarrollo y a facilitar la creación de prototipos, para ello incluyen un puente USB-Serial integrado en la placa y un conector micro-USB junto con un regulador de voltaje para proporcionar energía a la placa y conectividad con el ordenador, además de otras facilidades como botones, leds o conectores para baterías y antenas.\\
-
-Algunos modelos están basado en módulos ESP-XX de Espressif como el Adafruit Feather HUZZAH \cite{adafruit_feather_huzzah} que utiliza un módulo Ai-Thinker ESP-12S, en la figura \ref{fig:adafruit_feather_huzzah_pinout_2} se pude apreciar como el módulo de Ai-thinker está soldado directamente encima de la placa de desarrollo.\\~\\
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.12]{analisis/adafruit_feather_huzzah_pinout_2}
+\includegraphics[scale=0.10]{analisis/adafruit_feather_huzzah_pinout_2}
 \caption{Adafruit Feather HUZZAH}
 \label{fig:adafruit_feather_huzzah_pinout_2}
 \end{figure}
 
-Otros módulos de desarrollo no usan un módulo intermediario, en su lugar incorporan directamente el chip en la placa como es el caso del WEMOS D1 Mini Pro \cite{wemos_d1_mini_pro} que utiliza un ESP8266EX (Figura \ref{fig:wemos_d1_mini_pro}).\\
+Otros módulos de desarrollo no usan un módulo intermediario, en su lugar incorporan directamente el SoC en la placa como es el caso del WEMOS D1 Mini Pro \cite{wemos_d1_mini_pro} que utiliza un ESP8266EX (Figura \ref{fig:wemos_d1_mini_pro}).\\
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.5]{analisis/wemos_d1_mini_pro}
+\includegraphics[scale=0.3]{analisis/wemos_d1_mini_pro}
 \caption{WEMOS D1 Mini Pro}
 \label{fig:wemos_d1_mini_pro}
 %https://wiki.wemos.cc/products:retired:d1_mini_pro_v1.1.0
@@ -173,12 +151,11 @@ Otros módulos de desarrollo no usan un módulo intermediario, en su lugar incor
 
 Existen una gran variedad de estos módulos de diferentes fabricantes, algunos de los más conocidos son:  Feather de la empresa Adafruit Industries, ESP8266 Thing de la empresa SparkFun Electronics y NodeMCU del fabricante Lolin. Hay un gran rango de precios desde los 3€ del modelo de WEMOS a los 15€ del modelo de SparkFun \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}\cite{sparkfun_thing_official_page}.\\
 
-\pagebreak
-
 \noindent{\textbf{ESP32}}\\
+
 El ESP32, es una familia de SoC's de bajo coste y consumo con WiFi y Bluetooth modo dual integrado, también diseñado por Espressif Systems \cite{esp32_overview} es el sucesor del ESP8266.\\
 
-La familia de SoCs ESP32 dispone de una gran variedad de modelos la mayoría en un formato QFN de 5x5 mm y 6x6 mm (Figura \ref{fig:esp32_soc_pinout}) a excepción de la familia PICO que usan un encapsulado LGA de 7x7 mm, todos los modelos tienen 48 pines y utilizan microprocesadores Xtensa 32-bit LX6 en versiones de un solo núcleo dos dependiendo del modelo, ambas versiones pueden trabajar en frecuencias desde 80 MHz hasta 240MHz. Al desarrollar estos nuevos SoCs Espressif les doto de características ideales para dispositivos \textit{wearables} como el soporte para BLE, sensores táctiles capacitivos o modo de sueño para ahorro energético con el que consume menos de 5  uA. El precio de estos SoCs oscila entre 0,89€ y 3€ en los distribuidores oficiales de Espressif \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}.\\
+La familia de SoCs ESP32 dispone de una gran variedad de modelos la mayoría en un formato QFN de 5x5 mm y 6x6 mm a excepción de la familia PICO que usan un encapsulado LGA de 7x7 mm, todos los modelos tienen 48 pines y utilizan microprocesadores Xtensa 32-bit LX6 en versiones de un solo núcleo o dos dependiendo del modelo, ambas versiones pueden trabajar en frecuencias desde 80 MHz hasta 240MHz. Al desarrollar estos nuevos SoCs Espressif les doto de características ideales para dispositivos \textit{wearables} como el soporte para BLE, sensores táctiles capacitivos o modo de sueño para ahorro energético con el que consume menos de 5  uA. El precio de estos SoCs oscila entre 0,89€ y 3€ en los distribuidores oficiales de Espressif \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}.\\
 
 \begin{table}[H]
 \centering
@@ -200,14 +177,7 @@ Bluetooth           &  Bluetooth v4.2 BR/EDR y BLE dual-mode  \\ \hline
 \label{table:caracteristicas_esp32}
 \end{table}
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.3]{analisis/esp32_soc_pinout}
-\caption{ESP32 SoC Pinout  \cite{esp32_soc_pinout}.}
-\label{fig:esp32_soc_pinout}
-\end{figure}
-
-Al igual que su predecesor se comercializa en tres formatos: SoC, módulos y \textit{DevKits}. Esta vez Espressif aposto desde el principio por comercializar sus propios módulos y desarrollo una gran variedad de módulos, actualmente comercializa 13 variantes agrupadas en tres familias: ESP32-SOLO, ESP32-WROOM y ESP32-WROVER \cite{espressif_products_ordering_information}. La familia SOLO integra SoCs de un solo núcleo mientras las familias WROOM y WROVER utilizan doble núcleo, además esta última tiene memoria SPIRAM ideal para aplicaciones que requieren más memoria como productos AIoT. Con unas dimensiones que van desde los 18.00×25.50×3.10 mm hasta los 18.00×31.40×3.30 mm estos módulos contienen una memoria flash (4, 8 y 16 MB) y antena impresa PCB o conector IPEX para poder conectar antenas de mayor potencia. El precio de estos módulos oscila entre los 1,80€ hasta los 4,50€ dependiendo del modelo \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}.\\
+Al igual que su predecesor se comercializa en tres formatos: SoC, módulos y \textit{DevKits}. Esta vez Espressif aposto desde el principio por comercializar sus propios módulos y desarrolló una gran variedad de módulos, actualmente comercializa 13 variantes agrupadas en tres familias: ESP32-SOLO, ESP32-WROOM y ESP32-WROVER \cite{espressif_products_ordering_information}. La familia SOLO integra SoCs de un solo núcleo mientras las familias WROOM y WROVER utilizan doble núcleo, además esta última tiene memoria SPIRAM ideal para aplicaciones que requieren más memoria como productos AIoT. Con unas dimensiones que van desde los 18.00×25.50×3.10 mm hasta los 18.00×31.40×3.30 mm estos módulos contienen una memoria flash (4, 8 y 16 MB) y antena impresa PCB o conector IPEX para poder conectar antenas de mayor potencia. El precio de estos módulos oscila entre los 1,80€ hasta los 4,50€ dependiendo del modelo \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}.\\
 
 \begin{figure}[H]
 \centering
@@ -218,40 +188,29 @@ Al igual que su predecesor se comercializa en tres formatos: SoC, módulos y \te
 
 Espressif también ofrece una gran variedad de \textit{DevKits} para todo tipo de aplicaciones, desde placas con pantalla táctil integrada como la ESP32-S2-Kaluga-1, la ESP-EYE con cámara integrada para reconocimiento de imágenes e incluso placas con micrófonos, tecnologías de cancelación de ruido incorporadas y soporte para conectar con los servicios de asistente de voz de Google y Amazon como las ESP32-LyraTD. El modelo más básico, ESP32-DevKitC, se puede adquirir por aproximadamente 9€ en los distribuidores oficiales \cite{espressif_provider_digikey} \cite{espressif_provider_mouser}.\\
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.2]{analisis/esp32_devkitc_32u}
-\caption{Módulo de desarrollo ESP32-DevKitC-21U.}
-\label{fig:esp32_devkitc_32u}
-\end{figure}
-
 \paragraph{Elección}\mbox{}\\
 
-Para el desarrollo de este proyecto se han utilizado módulos de desarrollo ya que facilitan un desarrollo rápido y cómodo al permitir programar y alimentar el módulo fácilmente a través de una conexión USB, aunque no es habitual utilizar este tipo de módulos en aplicaciones reales ya que encarecería el coste del despliegue al incluir componentes que no serían necesarios una vez desplegados, por ejemplo, no es necesario que los dispositivos ya desplegados incluyan un adaptador USB-Serial ya que normalmente solo serán programados inicialmente y en caso de ser necesario actualizarlos se podría usar un adaptador externo o realizar actualizaciones vía OTA. Una vez completado el desarrollo lo normal es utilizar módulos como el ESP-12 o un ESP32-WROOM con un menor tamaño y consumo, aunque si no es un despliegue de grandes magnitudes, por ejemplo, para realizar investigaciones usar un módulo de desarrollo podría seguir siendo una buena opción ya que ahorraría crear el diseñó de la placa de alimentación que necesitaría un módulo.\\
+Para el desarrollo de este proyecto se han utilizado módulos de desarrollo ya que facilitan un desarrollo rápido y cómodo al permitir programar y alimentar el módulo fácilmente a través de una conexión USB, aunque no es habitual utilizar este tipo de módulos en aplicaciones reales ya que encarecen el coste del despliegue al incluir componentes que no serían necesarios una vez desplegados como el adaptador USB-Serial, por otra parte nos permiten ahorrar en el diseño de la placa de alimentación y otros componentes.\\
 
-Para el desarrollo de este proyecto en un principio se eligió el módulo de desarrollo WEMOS D1 Mini Pro basado en el SoC ESP8266, con unas dimensiones de 34.2 mm x 25.6 mm y un peso de 3 g es una de las placas más pequeñas del mercado, con un tamaño ligeramente más grande que un módulo ESP-12 (24.0 mm × 16.0 mm) incorpora un conversor P2104 USB-TO-UART, antena cerámica incorporada memoria flash de 16 MB y un regulador de tensión que permite alimentarlo a 5 V a través de un micro-USB. Una de los principales motivos para la elección de este módulo de desarrollo fue su reducido tamaño, la posibilidad de conectar una antena externa para mejorar el alcance mediante un conector de tipo U.FL y su reducido precio de tan solo 3€ \cite{lolin_official_store}. \\
+Para el desarrollo de este proyecto en un principio se eligió el módulo de desarrollo WEMOS D1 Mini Pro basado en el SoC ESP8266, con unas dimensiones de 34.2 mm x 25.6 mm y un peso de 3 g es una de las placas más pequeñas del mercado, con un tamaño ligeramente más grande que un módulo ESP-12 (24.0 mm × 16.0 mm) incorpora un conversor P2104 USB-TO-UART, antena cerámica incorporada memoria flash de 16 MB y un regulador de tensión que permite alimentarlo a 5 V a través de un micro-USB. Uno de los principales motivos para la elección de este módulo de desarrollo fue su reducido tamaño, la posibilidad de conectar una antena externa para mejorar el alcance mediante un conector de tipo U.FL y su reducido precio de tan solo 3€ \cite{lolin_official_store}. Otra de las ventajas de este módulo de desarrollo, a pesar de estar fuera del alcance de este proyecto, es la posibilidad de ampliar la funcionalidad a través de la conexión de expansiones en formato \textit{shields}. Existe una gran variedad \textit{shields} como, por ejemplo, pantalla oled, relé o controlador de motores.\\
 
-Otra de las ventajas de este módulo de desarrollo, a pesar de estar fuera del alcance de este proyecto, es la posibilidad de ampliar la funcionalidad a través de la conexión de expansiones en formato shields. Existe una gran variedad shields como, por ejemplo, pantalla oled, relé o controlador de motores (Figura \ref{fig:wemos_d1_mini_shields}).\\
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.15]{analisis/wemos_d1_mini_shields}
-\caption{WEMOS D1 Mini Shields}
-\label{fig:wemos_d1_mini_shields}
-%https://github.com/mcauser/Fritzing-Part-WeMos-D1-mini-Shields
-\end{figure}
-
-Como punto negativo este módulo no cuenta con Bluetooth integrado por lo que para cumplir los requisitos de este proyecto es necesario usarlo junto a un módulo Bluetooth externo como el HC-05 (Figura \ref{fig:hc05_bluetooth_module}), estos módulos se pueden conectarse fácilmente con el ESP8266 usando el puerto serie y se configuran utilizando comandos AT, se pueden adquirir por alrededor de 2€ por lo que el coste total en componentes sería de aproximadamente unos 5€ por lo que seguiría cumpliendo el requisito del bajo coste.
+Como punto negativo este módulo no cuenta con Bluetooth integrado por lo que para cumplir los requisitos de este proyecto es necesario usarlo junto a un módulo Bluetooth externo como el HC-05 (Figura \ref{fig:hc05_bluetooth_module}), estos módulos pueden conectarse con el ESP8266 usando el puerto serie y se configuran utilizando comandos AT, se pueden adquirir por alrededor de 2€ por lo que el coste total en componentes sería de aproximadamente unos 5€ por lo que seguiría cumpliendo el requisito del bajo coste.
 
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.2]{analisis/hc05_bluetooth_module}
 \caption{Módulo Bluetooth HC-05}
 \label{fig:hc05_bluetooth_module}
-%https://github.com/mcauser/Fritzing-Part-WeMos-D1-mini-Shields
 \end{figure}
 
-Por las razones expuestas inicialmente se decidió utilizar el SoC ESP8266 junto con el módulo Bluetooth HC-05 ya que cumplía con el requisito del bajo coste mejor que ninguna de las opciones incluso teniendo en cuenta el hecho de tener que adquirir el módulo Bluetooth por separado, pero durante el desarrollo del proyecto se apreció que en la valoración inicial no se había tenido en cuenta el coste que supondría el proceso de integración de estos módulo, aunque aparentemente una operación sencilla como es el soldado o cableado de estos dos módulos supondría un gran coste en mano de obra para realizar grandes despliegues. Este motivo llevo a replantear la opción del ESP32 ya que este SoC dispone de conectividad Bluetooth nativa, inicialmente fue descartado por tener un mayor coste pero al tener en cuenta los costes de integración de la primera elección quedan igualados en este punto, también simplificaría el diseño al poder configurar el Bluetooth sin necesidad de utilizar comandos AT, además dispone de un procesador más potente y de doble núcleo. Por todo lo expuesto finalmente se eligió el SoC ESP32 como solución para este proyecto, en concreto se utilizará le módulo de desarrollo ESP 32 DevKitC de Espressif.\\
+Por las razones expuestas inicialmente se decidió utilizar el SoC ESP8266 junto con el módulo Bluetooth HC-05 ya que cumplía con el requisito del bajo coste mejor que ninguna de las opciones incluso teniendo en cuenta el hecho de tener que adquirir el módulo Bluetooth por separado, pero durante el desarrollo del proyecto se apreció que en la valoración inicial no se había tenido en cuenta el coste que supondría el proceso de integración de estos módulo, aunque aparentemente una operación sencilla como es el soldado o cableado de estos dos módulos supondría un gran coste en mano de obra para realizar grandes despliegues, además de plantear una mayor dificultad en el desarrollo. Este motivo llevo a replantear la opción del ESP32 ya que este SoC dispone de conectividad Bluetooth nativa, inicialmente fue descartado por tener un mayor coste pero al tener en cuenta los costes de integración de la primera elección quedan igualados en este punto, también simplificaría el diseño al poder configurar el Bluetooth sin necesidad de utilizar comandos AT, además dispone de un procesador más potente y de doble núcleo. Por todo lo expuesto finalmente se eligió el SoC ESP32 como solución para este proyecto, en concreto se utilizará el módulo de desarrollo ESP 32 DevKitC-32D de Espressif (Figura \ref{fig:esp32_devkitc_32d}), esta placa está basada en el módulo de doble procesador ESP32-WROOM-32D y tiene unas dimensiones de 54.4x27.9 mm, además cuenta con 4 MB de memoria flash y un convertidor USB-UART con conexión microUSB que también permite alimentarlo a 5V. Tiene un precio de 8.70€ en distribuidores oficiales.\\
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.2]{analisis/esp32_devkitc_32u}
+\caption{Módulo de desarrollo ESP32-DevKitC-32D}
+\label{fig:esp32_devkitc_32d}
+\end{figure}
 
 \subsubsection{Framework}
 
