@@ -1,0 +1,33 @@
+\documentclass[../proyecto.tex]{subfiles}
+
+\begin{document}
+\chapter{Coste de producción del sensor}\label{chap:coste_sensor}
+
+En este anexo se muestra el coste total de los componentes necesarios para desplegar el sensor en un entorno real, en concreto, un despliegue para la monitorización del tráfico instalando los sensores en farolas o postes. Para el cálculo se ha teniendo en cuenta el precio unitario sin descuento por volumen, pero dado que la mayoría de proveedores consultados ofrecen este tipo de descuento es previsible que este coste se reduzca para grandes compras.\\
+
+También ha de tenerse en cuenta que en este desglose no se han incluido los costes de mano de obra de la instalación del sensor dada la dificultad de su cálculo ya que estos tendrán una gran variación dependiendo del cliente y del entorno en el que se desplieguen.\\
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ |l|r| }
+\hline
+\textbf{Concepto} & \textbf{Precio (€)} \\
+\hline\hline
+ESP32-DevKitC-32D  & 8,47  \\ \hline
+Conversor AC/DC 220V a 5V & 8 \\ \hline
+Cable de alimentación & 2 \\ \hline
+Caja con grado de protección IP65  & 19,39  \\ \hline
+Soporte de montaje para mástiles/farolas & 11,86 \\ \hline
+\textbf{Total} & 49,72\\ \hline
+\end{tabular}
+\caption{Coste de producción del sensor}
+\label{table:coste_producción_sensor}
+\end{table}
+
+%https://www.mouser.es/ProductDetail/356-ESP32-DEVKITC32D
+%https://www.tindie.com/products/iotbots/qbox-diy-iot-enclosure-kit-no-sma/
+%https://www.tindie.com/products/Armtronix/mi001-ac-dc-220v-to-5v-33v600ma-3w-module/
+%https://www.dieltron.com/pfa152-e-cctv-soporte-para-mastiles-farolas-para-camaras-bullet-o-domos-51710.html
+
+\end{document}

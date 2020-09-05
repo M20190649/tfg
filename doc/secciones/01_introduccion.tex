@@ -19,13 +19,18 @@ La idea de estudiar la movilidad urbana mediante este tipo de sensores plantea u
 
 \section{Objetivos}
 
-El principal objetivo de este proyecto es desarrollar un sensor de detección de presencia utilizando SoCs de bajo coste y consumo que permitan monitorizar en tiempo real el movimiento de transeúntes y vehículos mediante el análisis de tráfico WiFi y BLE generado por dispositivos móviles personales como \textit{smartphones} o dispositivos \textit{wearables}, este sensor además enviará estas detecciones a un servidor central.\\
+El objetivo de este proyecto es desarrollar un sensor de detección e identificación de presencia basado en tecnologías SoCs, con un coste inferior al sistema MOBYWIT (\autoref{chap:estado_arte}), que permita monitorizar el movimiento de transeúntes y vehículos mediante el análisis de tráfico WiFi y BLE generado por dispositivos móviles personales como \textit{smartphones} o dispositivos \textit{wearables}, estas detecciones además deben ser recolectadas por un sistema que permita su visualización y consulta mediante una API.\\
 
-Para facilitar la visualización de estas detecciones se plantea un objetivo secundario consistente en el desarrollo de un servidor central que permita recopilar las detecciones de los sensores, este servidor constará de una API REST que facilitará el envío de las detecciones además de su consulta y de una interfaz web para poderlas visualizar cómodamente.\\
-
-Cabe destacar que no es propósito de este proyecto el posterior análisis de los datos recabados por los sensores, tratándose el servidor descrito como objetivo secundario de un simple recolector centralizado de las detecciones realizadas. Tampoco entra dentro de los objetivos de este proyecto diseñar el plan de despliegue de los sensores, esto incluye el diseño del soporte que se usaría para desplegar el sensor y otros asuntos relacionados como sistemas de alimentación autónomos.\\
+Cabe destacar que no es propósito de este proyecto el posterior análisis de los datos recabados por los sensores. Tampoco entra dentro de los objetivos de este proyecto diseñar el plan de despliegue de los sensores.\\
 
 \section{Estructura del documento}
 
+ Tras una introducción de este proyecto y sus objetivos se realiza un análisis y crítica a las soluciones actuales en el \autoref{chap:estado_arte} . A continuación, en el \autoref{chap:planificacion} se describe la metodología utilizado en este proyecto junto al presupuesto de su desarrollo.\\
+
+En el \autoref{chap:descripcion_problema} se describirá el principal problema que afronta este proyecto mediante el análisis de los estándares WiFi y BLE. Más tarde, en los capítulos \autoref{chap:analisis_del_problema} y \autoref{chap:implementacion} se realiza un análisis de las posibles soluciones, se expondrá la solución elegida y finalmente como se ha implementado.
+
+Finalmente, en el \autoref{chap:conclusiones}, se muestran las conclusiones obtenidas tras el desarrollo del proyecto además de posible futuras líneas de trabajo.\\
+
+De forma complementaría en el  \autoref{chap:anexo_instalacion} se incluye una guía de instalación y en el \autoref{chap:coste_sensor} se realiza un desglose del coste del sensor.\\
 
 \end{document}
