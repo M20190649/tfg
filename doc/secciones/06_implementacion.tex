@@ -3,7 +3,7 @@
 \begin{document}
 \chapter{Implementación}\label{chap:implementacion}
 
-En este capítulo se describirá en profundidad como se ha realizado la implantación de la soluciones propuestas en el \autoref{chap:analisis_del_problema} tanto para el desarrollo del sensor como del servidor central. Divido en dos secciones principales, en la  \autoref{sect:impementacion_sensor} se describirá la implementación del sensor y en la \autoref{sect:impementacion_servidor_central} la del servidor central.\\
+En este capítulo se describirá en profundidad como se ha realizado la implantación de la soluciones propuestas en el \autoref{chap:analisis_del_problema} tanto para el desarrollo del sensor como del servidor central. Divido en dos secciones principales, en la \autoref{sect:impementacion_sensor} se describirá la implementación del sensor y en la \autoref{sect:impementacion_servidor_central} la del servidor central.\\
 
  \section{Sensor}\label{sect:impementacion_sensor}
 
@@ -21,14 +21,9 @@ Durante la fase de inicialización el módulo ejecutará secuencialmente las sig
 
 A continuación se realizará una breve descripción del código relacionado con la detección de las tramas Bluetooth y WiFi, y del procedimiento para su envío al servidor central.\\
 
-Para realizar la detección de dispositivos Bluetooth se ha utilizado la librería \textit{BLEScan} incluida en las librerías de Arduino para el ESP32, esta librería crea una capa de abstracción sobre las librerías de BLE de ESP-IDF facilitándonos una API que se adapta a la mayoría de casos de uso al mismo tiempo que provee de métodos para ajustar y adaptar a más bajo nivel para casos más complejos.\\
+Para realizar la detección de dispositivos Bluetooth se ha utilizado la librería \textit{BLEScan} incluida en las librerías de Arduino para el ESP32, esta librería crea una capa de abstracción sobre las librerías de BLE de ESP-IDF facilitándonos una API que se adapta a la mayoría de casos de uso al mismo tiempo que provee de métodos para ajustar y adaptar a más bajo nivel para casos más complejos. Esta librería reduce enormemente la complejidad del código ya que además de simplificar la interacción con las librerías de \textit{ESP-IDF} nos proporciona otras ventajas como la posibilidad de registrar una función \textit{callback} asíncrona que será invocada cada vez que un dispositivo sea detectado. En la función \textit{callback} (\autoref{lst:ble_callback}) se extraerá la dirección Bluetooth del anunciante y se guardará la fecha y hora de la detección en formato de fecha Epoch.\\
 
-Esta librería reduce enormemente la complejidad del código ya que además de simplificar la interacción con las librerías de \textit{ESP-IDF} nos proporciona otras ventajas como la posibilidad de registrar una función \textit{callback} asíncrona que será invocada cada vez que un dispositivo sea detectado.\\
-
-En la función \textit{callback} se extraerá la dirección Bluetooth del anunciante y se guardará la fecha y hora de la detección en formato de fecha Epoch.\\
-
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=C++, caption=Función \textit{callback} para el escaneo BLE, captionpos=b, frame=single]
+\begin{lstlisting}[language=C++, caption=Función \textit{callback} para el escaneo BLE, captionpos=b, frame=single, label={lst:ble_callback}]
 class ble_advertised_device_cb: public BLEAdvertisedDeviceCallbacks {
     void onResult(BLEAdvertisedDevice advertisedDevice) {
         time_t now;
@@ -36,23 +31,16 @@ class ble_advertised_device_cb: public BLEAdvertisedDeviceCallbacks {
         String bd_addr = advertisedDevice.getAddress().toString().c_str();
         ble_detected[bd_addr] = now;
 
-        #if DEBUG == 1
-        Serial.println();
-        struct tm timeinfo;
-        localtime_r(&now, &timeinfo);
-        Serial.printf("Bluetooth detection: | MAC: %s ", advertisedDevice.getAddress().toString().c_str());
-        Serial.print(" - Time: ");
-        Serial.print(&timeinfo);
-        Serial.println();
-        #endif
+        ...
+
     }
-};Z
+};
 \end{lstlisting}
-\end{minipage}
+
 
 Para monitorizar el tráfico WiFi ha sido necesario utilizar funciones de la API de ESP-IDF ya que las librerías de Arduino no proveen la posibilidad de activar el modo promiscuo necesario para poder analizar todo el tráfico WiFi y no solo el dirigido a nuestro dispositivo.\\
 
-La API de \textit{Networking} del ESP-IDF nos permite activar el modo promiscuo en la interfaz WiFi y además permite registrar una función \textit{callback} asíncrona que será invocada cada vez que un paquete es recibido, pero como se observó en el análisis del estándar WiFi para la detección de dispositivos solo necesitamos los paquetes de tipo \textit{management} y por tanto ejecutar el análisis del paquete con cada evento supondría una gran penalización en rendimiento, pero gracias a la función \textit{esp\_wifi\_set\_promiscuous\_filter} podemos establecer un filtro para determinar que tipo de paquetes dispararan la llamada a la función \textit{callback}, en concreto podemos utilizar el filtro \textit{WIFI\_PROMIS\_FILTER\_MASK\_MGMT}.\\
+La API de \textit{Networking} del ESP-IDF nos permite activar el modo promiscuo en la interfaz WiFi y además permite registrar una función \textit{callback} asíncrona que será invocada cada vez que un paquete es recibido, pero como se observó en el análisis del estándar WiFi para la detección de dispositivos solo necesitamos los paquetes de tipo \textit{management} y por tanto ejecutar el análisis del paquete con cada evento supondría una gran penalización en rendimiento, pero gracias a la función \textit{esp\_wifi\_set\_promiscuous\_filter} podemos establecer un filtro para determinar que tipo de paquetes dispararan la llamada a la función \textit{callback}, en concreto se ha utilizado el filtro \textit{WIFI\_PROMIS\_FILTER\_MASK\_MGMT}.\\
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[language=C++, caption=Activación del modo promiscuo con filtrado, captionpos=b, frame=single]
@@ -63,10 +51,9 @@ esp_wifi_set_promiscuous(true);
 \end{lstlisting}
 \end{minipage}
 
-Las librerías de ESP-IDF nos proporcionan una estructura de datos para el almacenamiento del paquete recibido por la función \textit{callback} pero en esta estructura solo se define miembros para los metadatos de la capa de radio como el canal dónde se ha recibido el paquete o la fuerza de la señal, sin embargo el propio \textit{frame} se presenta como un simple puntero a los datos en bruto, esta estructura por tanto resulta ineficiente para la manipulación de los campos que necesitamos y es necesario definir nuestras propias estructuras de datos para almacenar la trama IEEE802.11 de tipo \textit{management}.\\
+Las librerías de ESP-IDF nos proporcionan una estructura de datos para el almacenamiento del paquete recibido por la función \textit{callback} pero en esta estructura solo se define miembros para los metadatos de la capa de radio como el canal dónde se ha recibido el paquete o la fuerza de la señal, sin embargo el propio \textit{frame} se presenta como un simple puntero a los datos en bruto, esta estructura por tanto resulta ineficiente para la manipulación de los campos que necesitamos y es necesario definir nuestras propias estructuras de datos para almacenar la trama IEEE802.11 de tipo \textit{management} (\autoref{lst:estructuras_trama_management}).\\
 
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=C++, caption=Estructuras de datos para almacenamiento de las cabeceras IEEE802.11 , captionpos=b, frame=single]
+\begin{lstlisting}[language=C++, caption=Estructuras de datos para almacenamiento de las cabeceras IEEE802.11 , captionpos=b, frame=single, label={lst:estructuras_trama_management}]
 struct frame_control {
     unsigned protocol_version:2;
     unsigned type:2;
@@ -83,16 +70,13 @@ struct iee80211_header {
     uint16_t seq_ctrl;
 };
 \end{lstlisting}
-\end{minipage}
 
-Una vez definidas las estructuras de datos necesarias podemos realizar el análisis de la trama en busca de la dirección de la estación emisora, esta lógica se define dentro de la función \textit{callback} descrita anteriormente. En esta función se realizará la extracción de la dirección MAC y se almacenará junto a la fecha y hora de detección en formato de tiempo Epoch.\\
+Una vez definidas las estructuras de datos necesarias podemos realizar el análisis de la trama en busca de la dirección de la estación emisora, esta lógica se define dentro de la función \textit{callback} descrita anteriormente. En esta función se realizará la extracción de la dirección MAC y se almacenará junto a la fecha y hora de detección en formato de tiempo Epoch (\autoref{lst:wifi_callback}).\\
 
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=C++, caption=Función \textit{callback} para el modo promiscuo , captionpos=b, frame=single]
+\begin{lstlisting}[language=C++, caption=Función \textit{callback} para el modo promiscuo , captionpos=b, frame=single, label={lst:wifi_callback}]
 void ICACHE_FLASH_ATTR Sniffer::sniffer_callback(void *buff, wifi_promiscuous_pkt_type_t type)
 {
-    if (type == WIFI_PKT_MGMT) { //Maybe unnecessary after filter
-        // Obtenemos el
+    if (type == WIFI_PKT_MGMT) {
         const wifi_promiscuous_pkt_t *packet = (wifi_promiscuous_pkt_t *)buff;
 
         struct Sniffer::iee80211_header *header = (struct iee80211_header*) packet->payload;
@@ -100,60 +84,32 @@ void ICACHE_FLASH_ATTR Sniffer::sniffer_callback(void *buff, wifi_promiscuous_pk
             && header->frame_control.subtype == SUBTYPE_PROBE_REQUEST) {
               time_t now;
               time(&now);
-              // The second address in MAC header is the transmitting station.
               uint8_t *addr = header->address_2;
               char mac_addr[18];
               sprintf(mac_addr, "%02x:%02x:%02x:%02x:%02x:%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
               sta_detected[String(mac_addr)] = now;
-              #if DEBUG == 1
-                Serial.println();
-                struct tm timeinfo;
-                localtime_r(&now, &timeinfo);
-                Serial.print( "WiFi detection | MAC: " + String(mac_addr) );
-                Serial.print(" - Time: ");
-                Serial.print(&timeinfo);
-                Serial.println();
-              #endif
+
+              ...
+
         }
     }
 }
 \end{lstlisting}
-\end{minipage}
 
 Una vez lanzados los procesos asíncronos de detección en el bucle principal se comprobará si el número de detecciones realizadas supera el umbral establecido, esta comprobación se realiza en intervalos de 200 ms y una vez alcanzado el umbral la detección se detendrá temporalmente para dar paso al envío de las detecciones al servidor central, la detención del escaneo es necesaria ya que el módulo no puede estar en modo promiscuo y en modo estación simultáneamente. El umbral establecido es de 100 detecciones, este umbral ha sido calculado en base a las limitaciones de memoria del módulo y a minimizar el tiempo de parada que será necesario para el envío de las detecciones.\\
 
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=C++, caption=Bucle principal , captionpos=b, frame=single]
-void loop() {
-    uint32_t detecions_count = Sniffer::sta_detected.size() + ble_detected.size();
-    if (detecions_count >= 100) {
-        p_ble_scan->stop();
-        promiscuous_mode(false);
-        send_detections();
-        p_ble_scan->start(5, scan_complete_cb, false);
-        promiscuous_mode(true);
-    }
-    if (!ble_scan_active) {
-        p_ble_scan->start(5, scan_complete_cb, false);
-        ble_scan_active = true;
-    }
-    Sniffer::channel_hop();
-    delay(200);
-}
-\end{lstlisting}
-\end{minipage}
+La fase de envío de detecciones consiste principalmente en dos subfases \autoref{lst:envio_detecciones}, en primer lugar se serializan las detecciones en un documento JSON y en la segunda fase se envían mediante HTTP al servidor central. Para el envío de las detecciones al servidor central se utiliza la librería HTTPClient incluida en el core de Arduino, esta libería permite realizar fácilmente peticiones GET, POST y PUT a servidores HTTP. También se ha usado la librería ArduinoJson de Benoît Blanchon que permite serializar fácilmente las detecciones en un objeto JSON que se utilizará para el envío al servidor central mediante una petición POST. Cabe destacar que para facilitar el tratamiento de las direcciones detectadas y proveer de una mayor privacidad estas son codificadas utilizando el algoritmo MD5 antes de ser enviadas.\\
 
-La fase de envío de detecciones consiste principalmente en dos fases, en primer lugar se serializan las detecciones en un documento JSON  y en la segunda fase se envían mediante HTTP al servidor central. Para el envío de las detecciones al servidor central se utilizan la librería HTTPClient incluida en el core de Arduino, esta libería permite realizar fácilmente peticiones GET, POST y PUT a servidores HTTP. También se ha usado la librería ArduinoJson de Benoît Blanchon que permite serializar fácilmente las detecciones en un objeto JSON que se utilizará para el envío al servidor central mediante una petición POST.
-
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=C++, caption=Envío de detecciones al servidor central , captionpos=b, frame=single]
+\begin{lstlisting}[language=C++, caption=Envío de detecciones al servidor central , captionpos=b, frame=single, label={lst:envio_detecciones}]
 void send_detections() {
     Serial.println("Sending detections. ");
+
+    //Conexion al punto de acceso para enviar las detecciones.
     connect_wifi();
 
-    // Memory pool for JSON object tree (bytes).
+    // Creacion del documento JSON
     DynamicJsonDocument json_doc(20000);
-
+    // Insercion de las detecciones en el documento JSON
     json_doc["node"] = station_id;
     JsonObject detections = json_doc.createNestedObject("detections");
     for (std::map<String,uint32_t>::iterator it=Sniffer::sta_detected.begin(); it!=Sniffer::sta_detected.end(); ++it) {
@@ -163,18 +119,17 @@ void send_detections() {
         detections[md5(it->first)] = it->second;
     }
 
-    // Clear detecions
+    // Liberacion de memoria de las estructuras de datos usadas para almacenar las detecciones.
     Sniffer::sta_detected.clear();
     ble_detected.clear();
 
-    #if DEBUG == 1
-    serializeJsonPretty(json_doc, Serial);
-    Serial.println();
-    #endif
+    ...
 
+    // Serializacion del documento JSON
     String databuf;
     serializeJson(json_doc, databuf);
-    // Post detections
+
+    // Envio de las detecciones a traves de llamada HTTP Post
     HTTPClient http;
     http.begin(SERVER_URL);
     http.addHeader("Content-Type", "application/json");
@@ -182,15 +137,10 @@ void send_detections() {
     http.end();
 }
 \end{lstlisting}
-\end{minipage}
 
 \section{Servidor Central}\label{sect:impementacion_servidor_central}
 
-Como se estableció en la introducción de este trabajo uno de los objetivos secundarios consiste en almacenar y poder visualizar todas las detecciones realizadas por los sensores en un servidor central, con este propósito se ha desarrollado una API REST basada en HTTP, usando JSON como formato de intercambio de datos. Además se ha desarrollado una interfaz web para poder visualizar de una forma más cómoda las detecciones.\\
-
-A lo largo de esta sección se describirán los principales componentes de este sistema, como se han implementado y las herramientas utilizadas.\\
-
-Para el desarrollo de la API y la interfaz web se ha utilizado el \textit{framework} de desarrollo web Flask, para desplegar esta herramienta se han empleado contenedores Docker que serán desplegados utilizando el proveedor PaaS Heroku, en la Figura \ref{fig:estructura_servidor_central} se puede ver la estructura del despliegue.\\
+Como se estableció en la introducción de este trabajo uno de los objetivos consiste en recolectar y poder visualizar todas las detecciones realizadas por los sensores, con este propósito se ha desarrollado una API REST basada en HTTP, usando JSON como formato de intercambio de datos. Además se ha desarrollado una interfaz web para poder visualizar de una forma más cómoda las detecciones.\\
 
 \begin{figure}[H]
 \centering
@@ -198,6 +148,8 @@ Para el desarrollo de la API y la interfaz web se ha utilizado el \textit{framew
 \caption{Estructura servidor central }
 \label{fig:estructura_servidor_central}
 \end{figure}
+
+Para el desarrollo de la API y la interfaz web se ha utilizado el \textit{framework} de desarrollo web Flask y para desplegar esta herramienta se han empleado contenedores Docker que serán desplegados utilizando el proveedor PaaS Heroku, en la Figura \ref{fig:estructura_servidor_central} se puede ver la estructura del despliegue.\\
 
 \subsection{Base de datos}
 
@@ -214,7 +166,7 @@ Para facilitar la conexión con la base de datos y el tratamiento de los datos c
 
 SQLAlchemy \cite{sqlalchemy} ha sido la herramienta ORM seleccionada para este fin, para integrarla con la aplicación se ha utilizado las extensión Flask-SQLAlchemy \cite{flask_sqlalchemy} que simplifica el uso de SQLAlchemy con Flask proporcionando valores predeterminados útiles y funciones adicionales que facilitan la realización de tareas comunes.\\
 
-Utilizando esta extensión se han definido los modelos de datos utilizando clases dentro del código de la aplicación tal y como se muestra a continuación.\\
+Utilizando esta extensión se han definido los modelos de datos utilizando clases dentro del código de la aplicación tal y como se muestra en el \autoref{lst:sqlalchemy_models}.\\
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, caption=Definición de modelos utilizando SQLAlchemy, label={lst:sqlalchemy_models}, captionpos=b, frame=single]
@@ -309,7 +261,7 @@ Un caso especial es el del \textit{endpoint} para inserción masiva de deteccion
 \end{lstlisting}
 \end{minipage}
 
-Para facilitar el tratamiento de los documentos JSON se ha utilizado la extensión Flask-Marshmallow \cite{flask_marshmallow}, esta extensión se integra con la extensión Flask-SQLAlchemy y nos permite crear esquemas (Código \ref{lst:marshmallow_schemas}) basados en nuestros modelos de datos  (Código \ref{lst:sqlalchemy_models}) facilitando la deserialización de los documentos JSON recibidos en objetos y viceversa, además nos aporta una capa de validación de los datos basándose en los tipos definidos en las clases de nuestro modelos.\\
+Para facilitar el tratamiento de los documentos JSON se ha utilizado la extensión Flask-Marshmallow \cite{flask_marshmallow}, esta extensión se integra con la extensión Flask-SQLAlchemy y nos permite crear esquemas (Código \ref{lst:marshmallow_schemas}) basados en nuestros modelos de datos (Código \ref{lst:sqlalchemy_models}) facilitando la deserialización de los documentos JSON recibidos en objetos y viceversa, además nos aporta una capa de validación de los datos basándose en los tipos definidos en las clases de nuestro modelos.\\
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, caption=Esquemas de datos de Flask-Marshmallow, label={lst:marshmallow_schemas},captionpos=b, frame=single]
@@ -338,9 +290,8 @@ sensors_schema = SensorSchema(many=True)
 \end{lstlisting}
 \end{minipage}
 
-Esta extensión nos permite reducir considerablemente el código necesario para tratar las peticiones a la API, en el Código \ref{lst:marshmallow_example} se muestra como ejemplo el tratamiento de la llamada a la API para crear un nuevo sensor, se puede observar como con una sola línea se realiza la validación y deserialización del documento JSON de entrada a un objeto de nuestra base de datos.\\
+Esta extensión nos permite reducir considerablemente el código necesario para tratar las peticiones a la API, en el Código \ref{lst:marshmallow_example} se muestra como ejemplo el tratamiento de la llamada a la API para crear un nuevo sensor, se puede observar como con una sola línea se realiza la validación y deserialización del documento JSON de entrada a un objeto de nuestra base de datos.
 
-\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, caption=Ejemplo de funcionamiento de Flask-Marshmallow, label={lst:marshmallow_example},captionpos=b, frame=single]
 @api.route('/sensors/', methods=['POST'])
 def new_sensor():
@@ -351,11 +302,10 @@ def new_sensor():
     return sensor_schema.jsonify(sensor), 201, \
            {'Location': url_for('api.get_sensor', sensor_id=sensor.id)}
 \end{lstlisting}
-\end{minipage}
 
 \subsection{Frontal Web}
 
-Para el diseño del frontal se  ha utilizado el \textit{framework} Bootstrap \cite{bootstrap_frontend_framework}, este \textit{framework} nos permite un desarrollo rápido y sencillo de interfaces web combinando CSS y Javascript, para ello nos facilita plantillas de diseño y elementos prediseñados como botones, formularios o menús de navegación. Además estos elementos están pensados para el diseño web adaptativo (\textit{responsive}) por lo que se ajustan de forma nativa a distintas resoluciones facilitando su visualizado en diferentes tipos de dispositivos. Para facilitar su integración con el motor de plantillas Jinja 2 se ha utilizado la extensión \textit{Flask-Bootstrap} \cite{flask_bootstrap} que proporciona macros para evitar repetir código innecesariamente a la vez que nos permite personalizarlo.\\
+Para el diseño del frontal se ha utilizado el \textit{framework} Bootstrap \cite{bootstrap_frontend_framework}, este \textit{framework} nos permite un desarrollo rápido y sencillo de interfaces web combinando CSS y Javascript, para ello nos facilita plantillas de diseño y elementos prediseñados como botones, formularios o menús de navegación. Además estos elementos están pensados para el diseño web adaptativo (\textit{responsive}) por lo que se ajustan de forma nativa a distintas resoluciones facilitando su visualizado en diferentes tipos de dispositivos. Para facilitar su integración con el motor de plantillas Jinja 2 se ha utilizado la extensión \textit{Flask-Bootstrap} \cite{flask_bootstrap} que proporciona macros para evitar repetir código innecesariamente a la vez que nos permite personalizarlo.\\
 
 También se ha utilizado \textit{Flask-Paginate}, esta extensión nos facilita herramientas para realizar la paginación de las detecciones mostradas en la interfaz web, necesario dado el gran volumen de detecciones a mostrar, para ello esta extensión nos proporciona los mecanismos para controlar la cantidad de elementos que se consultarán a la base de datos en cada vista, además de funciones para la generación de los elementos HTML necesarios para facilitar la navegación al usuario. \\
 
@@ -379,10 +329,9 @@ El resultado del uso de estas herramientas es una interfaz web limpia y sencilla
 
 \subsubsection{Docker}
 
-La primera pieza de este despliegue es la definición del contenedor que ejecutará la aplicación web, esta definición se realiza mediante el fichero \textit{Dockerfile} que contiene las instrucciones necesarias para crear la imagen que ejecutará el contenedor, como se puede observar en la primera línea del \textit{Dockerfile} para esta imagen se ha decidido partir de una imagen ya existente, \textit{python:alpine}, que nos proporciona una instalación base de Python sobre el sistema operativo ligero \textit{Alpine}, a partir de esta se instalarán las dependencias necesarias para ejecutar la aplicación y se copiará el código de la propia aplicación, entre otras acciones.\\
+La primera pieza de este despliegue es la definición del contenedor que ejecutará la aplicación web, esta definición se realiza mediante el fichero \textit{Dockerfile} que contiene las instrucciones necesarias para crear la imagen que ejecutará el contenedor, como se puede observar en la primera línea del \textit{Dockerfile} (\autoref{lst:dockerfile}) para esta imagen se ha decidido partir de una imagen ya existente, \textit{python:alpine}, que nos proporciona una instalación base de Python sobre el sistema operativo ligero \textit{Alpine}, a partir de esta se instalarán las dependencias necesarias para ejecutar la aplicación y se copiará el código de la propia aplicación, entre otras acciones.\\
 
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[caption=Dockerfile del servidor web, captionpos=b, frame=single]
+\begin{lstlisting}[caption=Dockerfile del servidor web, captionpos=b, frame=single, label={lst:dockerfile}]
 FROM python:alpine
 
 EXPOSE 5000
@@ -413,14 +362,12 @@ COPY vedetra-server.py config.py  entrypoint.sh ./
 
 ENTRYPOINT ["./entrypoint.sh"]
 \end{lstlisting}
-\end{minipage}
 
 Para el contenedor de PostgreSQL al no ser necesaria ninguna modificación se ha decidido utilizar directamente la imagen oficial de PostgreSQL (\textit{postgres:11-alpine}) sin necesidad de definir un fichero \textit{Dockerfile}, simplemente será necesario definir como variables de entorno el usuario y contraseña que la aplicación web utilizará para conectarse, el script de inicio que incluye esta imagen se encargará de crear dicho usuario.\\
 
-Una vez definidas las piezas básicas de este despliegue es necesario componer un servicio con ellas, para ello se ha utilizado Docker Compose, es una herramienta que permite definir y ejecutar aplicaciones basadas en múltiples contenedores Docker, para definir este servicio se utiliza un fichero YAML denominado \textit{docker-compose.yml}, en este fichero se define el origen o generación de las imágenes, la dependencia entres los contenedores, como se comunican entre ellos y con el exterior y las variables de entorno que se insertarán en los contenedores. \\
+Una vez definidas las piezas básicas de este despliegue es necesario componer un servicio con ellas, para ello se ha utilizado Docker Compose, es una herramienta que permite definir y ejecutar aplicaciones basadas en múltiples contenedores Docker, para definir este servicio se utiliza un fichero YAML denominado \textit{docker-compose.yml}, en este fichero (\autoref{lst:docker_compose}) se define el origen o generación de las imágenes, la dependencia entres los contenedores, como se comunican entre ellos y con el exterior y las variables de entorno que se insertarán en los contenedores. \\
 
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[caption=Fichero docker-compose.yml base, captionpos=b, frame=single]
+\begin{lstlisting}[caption=Fichero docker-compose.yml base, captionpos=b, frame=single, label={lst:docker_compose}]
 version: '3'
 services:
   vedetra:
@@ -438,14 +385,13 @@ services:
     expose:
       - 5432
 \end{lstlisting}
-\end{minipage}
 
 Esta definición nos permite utilizar Docker Compose para desplegar todo el entorno con el simple comando \textit{docker-compose up}.\\
 
-Docker Compose también nos facilitá la posibilidad de personalizar una aplicación para  diferentes entornos sin tener que reescribir la definición para cada entorno, para ello nos permite utilizar varios ficheros \textit{compose} que se combinarán, en el fichero base \textit{docker-compose.yml} se establece la definición común a todos los entornos y en un segundo fichero se definen las directivas específicas del entorno que ampliarán o sobrescribirán las definidas en el fichero base, por ejemplo, en el entorno de desarrollo se define un fichero de variables de entorno diferente y se añade un volumen al contenedor que estará conectado a la carpeta local del proyecto de forma que podamos realizar modificaciones en el código sin necesidad de recrear la imagen.\\
+Docker Compose también nos facilitá la posibilidad de personalizar una aplicación para diferentes entornos sin tener que reescribir la definición para cada entorno, para ello nos permite utilizar varios ficheros \textit{compose} que se combinarán, en el fichero base \textit{docker-compose.yml} se establece la definición común a todos los entornos y en un segundo fichero se definen las directivas específicas del entorno que ampliarán o sobrescribirán las definidas en el fichero base, por ejemplo, en el entorno de desarrollo se define un fichero de variables de entorno diferente y se añade un volumen al contenedor que estará conectado a la carpeta local del proyecto de forma que podamos realizar modificaciones en el código sin necesidad de recrear la imagen (\autoref{lst:docker_compose_dev}).\\
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption=Fichero docker-compose.yml para el entorno de desarrollo, captionpos=b, frame=single]
+\begin{lstlisting}[caption=Fichero docker-compose.yml para el entorno de desarrollo, captionpos=b, frame=single, label={lst:docker_compose_dev}]
 version: '3'
 services:
   vedetra:
