@@ -14,7 +14,7 @@ Para la estructuración del código principal se ha utilizado la estructura bás
 Durante la fase de inicialización el módulo ejecutará secuencialmente las siguientes tareas:
 \begin{itemize}
   \item Generar identificador único utilizado para enviar las detecciones al servidor central.
-  \item Conéctar a una red WiFi para sincronizar la hora mediante el prótocolo SNTP.
+  \item Conectar a una red WiFi para sincronizar la hora mediante el protocolo SNTP.
   \item Inicializar el escaneo Bluetooth.
   \item Inicializar el escaneo WiFi.
 \end{itemize}
@@ -51,7 +51,7 @@ esp_wifi_set_promiscuous(true);
 \end{lstlisting}
 \end{minipage}
 
-Las librerías de ESP-IDF nos proporcionan una estructura de datos para el almacenamiento del paquete recibido por la función \textit{callback} pero en esta estructura solo se define miembros para los metadatos de la capa de radio como el canal dónde se ha recibido el paquete o la fuerza de la señal, sin embargo el propio \textit{frame} se presenta como un simple puntero a los datos en bruto, esta estructura por tanto resulta ineficiente para la manipulación de los campos que necesitamos y es necesario definir nuestras propias estructuras de datos para almacenar la trama IEEE802.11 de tipo \textit{management} (\autoref{lst:estructuras_trama_management}).\\
+Las librerías de ESP-IDF nos proporcionan una estructura de datos para el almacenamiento del paquete recibido por la función \textit{callback} pero en esta estructura solo se define miembros para los metadatos de la capa de radio como el canal donde se ha recibido el paquete o la fuerza de la señal, sin embargo el propio \textit{frame} se presenta como un simple puntero a los datos en bruto, esta estructura por tanto resulta ineficiente para la manipulación de los campos que necesitamos y es necesario definir nuestras propias estructuras de datos para almacenar la trama IEEE802.11 de tipo \textit{management} (\autoref{lst:estructuras_trama_management}).\\
 
 \begin{lstlisting}[language=C++, caption=Estructuras de datos para almacenamiento de las cabeceras IEEE802.11 , captionpos=b, frame=single, label={lst:estructuras_trama_management}]
 struct frame_control {
@@ -98,7 +98,7 @@ void ICACHE_FLASH_ATTR Sniffer::sniffer_callback(void *buff, wifi_promiscuous_pk
 
 Una vez lanzados los procesos asíncronos de detección en el bucle principal se comprobará si el número de detecciones realizadas supera el umbral establecido, esta comprobación se realiza en intervalos de 200 ms y una vez alcanzado el umbral la detección se detendrá temporalmente para dar paso al envío de las detecciones al servidor central, la detención del escaneo es necesaria ya que el módulo no puede estar en modo promiscuo y en modo estación simultáneamente. El umbral establecido es de 100 detecciones, este umbral ha sido calculado en base a las limitaciones de memoria del módulo y a minimizar el tiempo de parada que será necesario para el envío de las detecciones.\\
 
-La fase de envío de detecciones consiste principalmente en dos subfases \autoref{lst:envio_detecciones}, en primer lugar se serializan las detecciones en un documento JSON y en la segunda fase se envían mediante HTTP al servidor central. Para el envío de las detecciones al servidor central se utiliza la librería HTTPClient incluida en el core de Arduino, esta libería permite realizar fácilmente peticiones GET, POST y PUT a servidores HTTP. También se ha usado la librería ArduinoJson de Benoît Blanchon que permite serializar fácilmente las detecciones en un objeto JSON que se utilizará para el envío al servidor central mediante una petición POST. Cabe destacar que para facilitar el tratamiento de las direcciones detectadas y proveer de una mayor privacidad estas son codificadas utilizando el algoritmo MD5 antes de ser enviadas.\\
+La fase de envío de detecciones consiste principalmente en dos subfases (\autoref{lst:envio_detecciones}), en primer lugar se serializan las detecciones en un documento JSON y en la segunda fase se envían mediante HTTP al servidor central. Para el envío de las detecciones al servidor central se utiliza la librería HTTPClient incluida en el core de Arduino, esta libería permite realizar fácilmente peticiones GET, POST y PUT a servidores HTTP. También se ha usado la librería ArduinoJson de Benoît Blanchon que permite serializar fácilmente las detecciones en un objeto JSON que se utilizará para el envío al servidor central mediante una petición POST. Cabe destacar que para facilitar el tratamiento de las direcciones detectadas y proveer de una mayor privacidad estas son codificadas utilizando el algoritmo MD5 antes de ser enviadas.\\
 
 \begin{lstlisting}[language=C++, caption=Envío de detecciones al servidor central , captionpos=b, frame=single, label={lst:envio_detecciones}]
 void send_detections() {
@@ -122,8 +122,6 @@ void send_detections() {
     // Liberacion de memoria de las estructuras de datos usadas para almacenar las detecciones.
     Sniffer::sta_detected.clear();
     ble_detected.clear();
-
-    ...
 
     // Serializacion del documento JSON
     String databuf;
@@ -158,7 +156,7 @@ El diseño de la base de datos para este proyecto ha resultado bastante sencillo
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.4]{implementacion/table_diagram}
-\caption{Diagrama de Entidad-Relación del servidor central.}
+\caption{Tablas del servidor central.}
 \label{fig:table_diagram}
 \end{figure}
 

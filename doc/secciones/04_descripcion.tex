@@ -56,7 +56,7 @@ El campo \textit{Type} permite determinar si se trata de una trama de tipo \text
 \label{table:tipos_trama}
 \end{table}
 
-Una vez identificada la trama como tipo \textit{Management} (00) los posibles valores que puede tomar el campo \textit{Subtype} son los mostrados en la tabla \ref{table:subtipos_trama}, en concreto el valor para las tramas del subtipo \textit{Probe Request} es el 0100.
+Una vez identificada la trama como tipo \textit{Management} (00) los posibles valores que puede tomar el campo \textit{Subtype} son los mostrados en la Tabla \ref{table:subtipos_trama}, en concreto el valor para las tramas del subtipo \textit{Probe Request} es el 0100.
 
 \begin{table}[h!]
 \centering
@@ -90,7 +90,7 @@ En las tramas de tipo de tipo \textit{Management} y subtipo \textit{Probe Reques
 
 \section{Bluetooth Low Energy}
 
-\textit{Bluetooth Low Energy} (BLE) es una tecnología de red inalámbrica originalmente diseñada por Nokia bajo el nombre Wibree y adoptada después por el  el \textit{Bluetooth Special Interest Group}, empezó como parte de la especificación Core del Bluetooth 4.0 y fue puesta en el mercado en 2010. Desde el principio el propósito de su desarrollo fue diseñar un estándar de radio con el menor consumo posible, enfocado a dispositivos de bajo coste y con un ancho de banda bajo que no requieran realizar conexiones de larga duración ni gran volumen de tráfico de datos. A pesar del poco tiempo que lleva en el mercado ha tenido una gran adopción debido al gran crecimiento del mercado de dispositivos móviles y \textit{wearables}.\\
+\textit{Bluetooth Low Energy} (BLE) es una tecnología de red inalámbrica originalmente diseñada por Nokia bajo el nombre Wibree y adoptada después por el \textit{Bluetooth Special Interest Group}, empezó como parte de la especificación Core del Bluetooth 4.0 y fue puesta en el mercado en 2010. Desde el principio el propósito de su desarrollo fue diseñar un estándar de radio con el menor consumo posible, enfocado a dispositivos de bajo coste y con un ancho de banda bajo que no requieran realizar conexiones de larga duración ni gran volumen de tráfico de datos. A pesar del poco tiempo que lleva en el mercado ha tenido una gran adopción debido al gran crecimiento del mercado de dispositivos móviles y \textit{wearables}.\\
 
 La capa física de BLE trabaja con 40 canales en la banda ISM de 2.4 GHz cada uno separado por 2MHz y define dos tipos de transmisiones: datos y \textit{advertising} (anuncio). 37 de estos canales se utilizan para las conexiones de datos y los últimos tres canales (37, 38 y 39) son usados como canales de \textit{advertising} para establecer nuevas conexiones o enviar datos de difusión. Se utilizan 3 canales para reducir la posibilidad de interferencia ya que estas frecuencias se comparten con otras tecnologías como el WiFi.
 
@@ -200,7 +200,7 @@ El formato del \textit{payload} de estos paquetes se describe en Figura \ref{fig
 Antes de pasar a analizar el campo \textit{AdvA} conviene realizar una breve descripción de las direcciones Bluetooth, a veces llamada dirección Bluetooth MAC y definida en el estándar como \textit{BD\_ADDR}, es un valor de 48 bits normalmente representado seis bloques de dos caracteres hexadecimales. El estándar define dos tipos de direcciones:
 
 \begin{itemize}
-  \item Pública: Es una dirección definida según el estándar EEE 802-2001 y se obtiene de la autoridad de registro del IEEE, al igual que ocurre con el estándar Ethernet esta viene fijada de fábrica y nunca cambia.
+  \item Pública: Es una dirección definida según el estándar IEEE 802-2001 y se obtiene de la autoridad de registro del IEEE, al igual que ocurre con el estándar Ethernet esta viene fijada de fábrica y nunca cambia.
   \item Aleatoria: Esta dirección puede preprogramarse en el dispositivo (estáticas) o generarse dinámicamente (privadas) en tiempo de ejecución. Existen tres tipos: estática, privada no resoluble y privada resoluble.
 \end{itemize}
 
